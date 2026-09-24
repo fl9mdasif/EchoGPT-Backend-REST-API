@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: echogpt
       POSTGRES_DB: echogpt
     ports:
-      - '5432:5432'
+      - '55432:5432'
     volumes:
       - echogpt_pgdata:/var/lib/postgresql/data
     healthcheck:

@@ -1,7 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// EchoGPT backend database schema.
+// See docs/architechture.md §5 for the ER-diagram-level overview.
 
 generator client {
   provider = "prisma-client"
@@ -10,4 +8,161 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Plan {
+  FREE
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+}
+
+enum ProviderType {
+  OPENAI
+  ANTHROPIC
+  GEMINI
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+model User {
+  id                    String    @id @default(cuid())
+  email                 String    @unique
+  passwordHash          String
+  role                  Role      @default(USER)
+  isEmailVerified       Boolean   @default(false)
+  emailVerificationToken String?  @unique
+  deletedAt             DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  subscription   Subscription?
+  refreshTokens  RefreshToken[]
+  aiProviders    AiProvider[]
+  conversations  Conversation[]
+  searchQueries  SearchQuery[]
+  apiUsageLogs   ApiUsageLog[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model Subscription {
+  id             String             @id @default(cuid())
+  userId         String             @unique
+  plan           Plan               @default(FREE)
+  status         SubscriptionStatus @default(ACTIVE)
+  requestsUsed   Int                @default(0)
+  requestsLimit  Int                @default(50)
+  paymentRef     String?
+  renewsAt       DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model AiProvider {
+  id                String       @id @default(cuid())
+  name              String
+  type              ProviderType
+  apiKeyEncrypted   String?
+  isEnabled         Boolean      @default(true)
+  isDefault         Boolean      @default(false)
+  ownerUserId       String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  owner         User?          @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  conversations Conversation[]
+
+  @@index([ownerUserId])
+  @@map("ai_providers")
+}
+
+model Conversation {
+  id         String   @id @default(cuid())
+  userId     String
+  title      String   @default("New conversation")
+  providerId String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider AiProvider? @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  messages Message[]
+
+  @@index([userId])
+  @@map("conversations")
+}
+
+model Message {
+  id             String      @id @default(cuid())
+  conversationId String
+  role           MessageRole
+  content        String
+  tokensUsed     Int?
+  createdAt      DateTime    @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@map("messages")
+}
+
+model SearchQuery {
+  id          String   @id @default(cuid())
+  userId      String
+  query       String
+  resultsJson Json?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("search_queries")
+}
+
+model ApiUsageLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  endpoint   String
+  method     String
+  statusCode Int
+  latencyMs  Int
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("api_usage_logs")
 }
