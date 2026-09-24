@@ -54,10 +54,12 @@ improvising — consistency matters more than any single file's "best" style.
 
 ## Testing
 
+- Runner is Vitest (what the current Nest CLI scaffolds by default), not
+  Jest — `npm run test` / `npm run test:e2e`. Supertest for HTTP assertions.
 - Unit test service logic where there's a branch worth covering (guards,
   limit checks, token rotation) — not getters/setters or pure passthroughs.
-- e2e (Supertest) covers each module's primary happy path plus one auth
-  failure case (401/403) per protected route group.
+- e2e covers each module's primary happy path plus one auth failure case
+  (401/403) per protected route group.
 - Tests run against a disposable test database (docker-compose service or
   a Postgres schema reset in `beforeAll`), never against dev data.
 

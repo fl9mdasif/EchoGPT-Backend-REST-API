@@ -10,21 +10,21 @@ phase's cleanup/polish items before its core functionality works end-to-end.
 - [x] docs/tasks.md (this file)
 - [x] docs/rules.md
 - [x] docs/memory.md
-- [ ] git init + first commit (docs)
+- [x] git init + first commit (docs)
 
 ## Phase 1 — Project scaffold
-- [ ] `server/`: NestJS project (`@nestjs/cli` new app)
-- [ ] Install: prisma, @nestjs/config, @nestjs/swagger, @nestjs/jwt,
+- [x] `server/`: NestJS project (`@nestjs/cli` new app)
+- [x] Install: prisma, @nestjs/config, @nestjs/swagger, @nestjs/jwt,
       @nestjs/passport, passport-jwt, class-validator, class-transformer,
-      bcrypt, helmet, @nestjs/throttler
-- [ ] `PrismaModule` + `PrismaService` (global module)
-- [ ] `ConfigModule` (typed, validated env schema via Joi/zod)
-- [ ] Global `ValidationPipe`, `AllExceptionsFilter`, `TransformInterceptor`
-- [ ] Swagger bootstrap at `/api/docs`
-- [ ] `docker-compose.yml` (postgres + app)
-- [ ] `.env.example`
-- [ ] Health endpoint `GET /health`
-- [ ] Commit: `chore: scaffold NestJS project with Prisma, Swagger, config`
+      bcrypt, helmet, @nestjs/throttler, @prisma/adapter-pg
+- [x] `PrismaModule` + `PrismaService` (global module, pg driver adapter)
+- [x] `ConfigModule` (typed, validated env schema via class-validator)
+- [x] Global `ValidationPipe`, `AllExceptionsFilter`, `TransformInterceptor`
+- [x] Swagger bootstrap at `/api/docs`
+- [x] `docker-compose.yml` (postgres + app) — verified end-to-end
+- [x] `.env.example`
+- [x] Health endpoint `GET /api/v1/health` (+ e2e test)
+- [x] Commit: `chore: scaffold NestJS project with Prisma, Swagger, config`
 
 ## Phase 2 — Database schema
 - [ ] `prisma/schema.prisma`: User, RefreshToken, Subscription, AiProvider,

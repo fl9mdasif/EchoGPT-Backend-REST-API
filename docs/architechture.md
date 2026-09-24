@@ -12,7 +12,7 @@
 | Validation | `class-validator` / `class-transformer` | Pairs with Nest's `ValidationPipe`, generates accurate Swagger schemas |
 | Secrets | `@nestjs/config` + `.env` | 12-factor config |
 | Containerization | Docker + docker-compose | Local Postgres + app, optional but recommended |
-| Testing | Jest (unit) + Supertest (e2e) | Nest default toolchain |
+| Testing | Vitest (unit) + Supertest (e2e) | Nest CLI's current default toolchain |
 
 ## 2. Repo layout
 
