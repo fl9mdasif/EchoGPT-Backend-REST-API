@@ -1,5 +1,10 @@
 import { Controller, Get, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import type { CurrentUserPayload } from '../auth/interfaces/jwt-payload.interface.js';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import { SubscriptionDto, UsageDto } from './dto/subscription.dto.js';
@@ -19,7 +24,9 @@ export class SubscriptionsController {
   }
 
   @Get('usage')
-  @ApiOperation({ summary: 'Get remaining requests for the current billing period' })
+  @ApiOperation({
+    summary: 'Get remaining requests for the current billing period',
+  })
   @ApiResponse({ status: 200, type: UsageDto })
   getUsage(@CurrentUser() user: CurrentUserPayload): Promise<UsageDto> {
     return this.subscriptionsService.getUsage(user.userId);
@@ -29,7 +36,8 @@ export class SubscriptionsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Upgrade to the PREMIUM plan',
-    description: 'No payment gateway is wired up — this is an internal state change only.',
+    description:
+      'No payment gateway is wired up — this is an internal state change only.',
   })
   @ApiResponse({ status: 200, type: SubscriptionDto })
   upgrade(@CurrentUser() user: CurrentUserPayload): Promise<SubscriptionDto> {

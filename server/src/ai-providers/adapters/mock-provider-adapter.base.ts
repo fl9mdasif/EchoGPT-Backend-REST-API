@@ -16,9 +16,14 @@ export abstract class MockProviderAdapterBase implements AiProviderAdapter {
   abstract readonly type: ProviderType;
   protected abstract readonly label: string;
 
-  async chat(messages: ChatMessage[], apiKey: string | null): Promise<ChatResult> {
+  async chat(
+    messages: ChatMessage[],
+    apiKey: string | null,
+  ): Promise<ChatResult> {
     await this.simulateLatency();
-    const lastUserMessage = [...messages].reverse().find((m) => m.role === 'user');
+    const lastUserMessage = [...messages]
+      .reverse()
+      .find((m) => m.role === 'user');
     const content = `[mock ${this.label} response${apiKey ? '' : ' — no API key configured'}] You said: "${lastUserMessage?.content ?? ''}"`;
     return { content, tokensUsed: Math.ceil(content.length / 4) };
   }

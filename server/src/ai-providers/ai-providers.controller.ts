@@ -1,5 +1,20 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import type { CurrentUserPayload } from '../auth/interfaces/jwt-payload.interface.js';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import { AiProvidersService } from './ai-providers.service.js';
@@ -14,14 +29,18 @@ export class AiProvidersController {
   constructor(private readonly aiProvidersService: AiProvidersService) {}
 
   @Get()
-  @ApiOperation({ summary: 'List your providers plus enabled global providers' })
+  @ApiOperation({
+    summary: 'List your providers plus enabled global providers',
+  })
   @ApiResponse({ status: 200, type: [AiProviderDto] })
   list(@CurrentUser() user: CurrentUserPayload): Promise<AiProviderDto[]> {
     return this.aiProvidersService.listForUser(user.userId);
   }
 
   @Post()
-  @ApiOperation({ summary: 'Add a provider (OpenAI/Anthropic/Gemini) with an API key' })
+  @ApiOperation({
+    summary: 'Add a provider (OpenAI/Anthropic/Gemini) with an API key',
+  })
   @ApiResponse({ status: 201, type: AiProviderDto })
   async create(
     @CurrentUser() user: CurrentUserPayload,
@@ -32,7 +51,8 @@ export class AiProvidersController {
 
   @Patch(':id')
   @ApiOperation({
-    summary: 'Edit a provider: rename, rotate its key, enable/disable, or set as default',
+    summary:
+      'Edit a provider: rename, rotate its key, enable/disable, or set as default',
   })
   @ApiResponse({ status: 200, type: AiProviderDto })
   @ApiResponse({ status: 404, description: 'Not found, or not owned by you' })
@@ -49,7 +69,10 @@ export class AiProvidersController {
   @ApiOperation({ summary: 'Delete a provider you own' })
   @ApiResponse({ status: 204 })
   @ApiResponse({ status: 404, description: 'Not found, or not owned by you' })
-  async remove(@CurrentUser() user: CurrentUserPayload, @Param('id') id: string): Promise<void> {
+  async remove(
+    @CurrentUser() user: CurrentUserPayload,
+    @Param('id') id: string,
+  ): Promise<void> {
     await this.aiProvidersService.remove(user.userId, id);
   }
 

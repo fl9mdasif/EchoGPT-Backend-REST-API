@@ -22,7 +22,11 @@ describe('Admin (e2e)', () => {
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('api/v1');
     app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
     );
     await app.init();
 
@@ -50,7 +54,7 @@ describe('Admin (e2e)', () => {
     expect(response.status).toBe(403);
   });
 
-  it("returns dashboard stats for an admin", async () => {
+  it('returns dashboard stats for an admin', async () => {
     const response = await request(app.getHttpServer())
       .get('/api/v1/admin/dashboard')
       .set('Authorization', `Bearer ${adminToken}`);
@@ -127,7 +131,11 @@ describe('Admin (e2e)', () => {
     const createResponse = await request(app.getHttpServer())
       .post('/api/v1/admin/ai-providers')
       .set('Authorization', `Bearer ${adminToken}`)
-      .send({ name: 'Admin Gemini', type: 'GEMINI', apiKey: 'admin-key-1234567890' });
+      .send({
+        name: 'Admin Gemini',
+        type: 'GEMINI',
+        apiKey: 'admin-key-1234567890',
+      });
     expect(createResponse.status).toBe(201);
     expect(createResponse.body.data.ownerUserId).toBeNull();
     globalProviderId = createResponse.body.data.id;
@@ -136,7 +144,11 @@ describe('Admin (e2e)', () => {
       .get('/api/v1/admin/ai-providers')
       .set('Authorization', `Bearer ${adminToken}`);
     expect(listResponse.status).toBe(200);
-    expect(listResponse.body.data.some((p: { id: string }) => p.id === globalProviderId)).toBe(true);
+    expect(
+      listResponse.body.data.some(
+        (p: { id: string }) => p.id === globalProviderId,
+      ),
+    ).toBe(true);
 
     const updateResponse = await request(app.getHttpServer())
       .patch(`/api/v1/admin/ai-providers/${globalProviderId}`)

@@ -1,114 +1,146 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# EchoGPT Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+REST API for the EchoGPT Chrome Extension. NestJS + PostgreSQL + Prisma +
+Swagger. Built for the AppifyDevs backend internship assignment — see
+[`../docs/`](../docs) for the PRD, architecture notes, task breakdown, and a
+running decisions/gotchas log.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Stack
 
-## Description
+NestJS 12 · Prisma 7 (`@prisma/adapter-pg`) · PostgreSQL 16 · Passport JWT ·
+Swagger (`@nestjs/swagger`) · class-validator/class-transformer · Vitest +
+Supertest · Docker Compose
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Requirements
 
-## Project setup
+- Node.js 22+
+- Docker (for Postgres; a local Postgres also works, see the port note below)
+
+## Setup
 
 ```bash
-$ npm install
+cp .env.example .env
+npm install --legacy-peer-deps
 ```
 
-## Compile and run the project
+`--legacy-peer-deps` works around a known npm 11 bug on this dependency
+graph, not a problem with the project's own dependencies — see
+`../docs/memory.md` for details.
+
+### Database
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+docker compose up -d db          # Postgres on localhost:55432
+npx prisma migrate dev           # applies all migrations + regenerates the client
+npx prisma db seed               # seeds an admin + demo user + a default AI provider
 ```
 
-## Run tests
+The compose Postgres publishes on host port **55432**, not the default
+5432 — this machine already had two native Postgres services on 5432 and
+5433. If that port's free for you, either works; just keep
+`docker-compose.yml` and `.env`'s `DATABASE_URL` in agreement.
+
+Seeded accounts (password `ChangeMe123!` for both):
+
+| Email | Role | Plan |
+|---|---|---|
+| `admin@echogpt.dev` | ADMIN | PREMIUM |
+| `demo@echogpt.dev` | USER | FREE |
+
+### Run
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm run start:dev                # http://localhost:3000/api/v1
 ```
 
-## Deployment
+Swagger UI: http://localhost:3000/api/docs · raw spec:
+http://localhost:3000/api/docs-json
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Run everything in Docker (api + db)
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+docker compose up -d --build
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Scripts
 
-## Observability
+```bash
+npm run build            # tsc build
+npm run start:dev        # watch mode
+npm run lint              # oxlint
+npm run test               # unit tests (vitest)
+npm run test:e2e            # e2e tests (vitest, needs a running Postgres)
+npm run prisma:migrate      # prisma migrate dev
+npm run prisma:generate     # regenerate the Prisma client
+npm run prisma:seed         # re-run the seed script
+```
 
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
+## Project layout
 
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
+```
+src/
+  common/        guards, decorators, filters, interceptors, dto, crypto shared across modules
+  config/        typed + validated env config
+  prisma/        PrismaModule/PrismaService (pg driver adapter)
+  auth/          register/login/refresh/logout, JWT strategies, guards
+  users/         profile, password change, account deletion
+  subscriptions/ plans, usage limits, upgrade/downgrade
+  ai-providers/  provider CRUD, AES-256-GCM key encryption, adapters, health check
+  chat/          conversations, send prompt, SSE streaming
+  search/        search query, history, suggestions, caching
+  admin/         dashboard, user/subscription/provider admin, usage analytics, logs
+  health/        liveness check
+prisma/
+  schema.prisma, migrations/, seed.ts
+test/            *.e2e-spec.ts, one file per module
+```
 
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
+Every feature module follows the same shape: `*.module.ts`,
+`*.controller.ts`, `*.service.ts`, `dto/`.
 
-## Resources
+## API overview
 
-Check out a few resources that may come in handy when working with NestJS:
+All routes are under `/api/v1` and, unless marked `@Public()`
+(auth's register/login/refresh/logout/verify-email, and `/health`), require
+`Authorization: Bearer <accessToken>`. `/admin/*` additionally requires the
+`ADMIN` role.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observer](https://observer.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+| Module | Routes |
+|---|---|
+| Auth | `POST /auth/{register,login,refresh,logout}`, `GET /auth/verify-email` |
+| Users | `GET/PATCH /users/me`, `PATCH /users/me/password`, `DELETE /users/me` |
+| Subscriptions | `GET /subscriptions/{me,usage}`, `POST /subscriptions/{upgrade,downgrade}` |
+| AI Providers | `GET/POST /ai-providers`, `PATCH/DELETE /ai-providers/:id`, `GET /ai-providers/:id/health` |
+| Chat | `GET/POST /chat/conversations`, `GET /chat/conversations/:id/messages`, `DELETE /chat/conversations/:id`, `POST /chat/send`, `GET /chat/send/stream` (SSE) |
+| Search | `POST /search`, `GET /search/{history,recent,suggestions}` |
+| Admin | `GET /admin/dashboard`, `GET /admin/system-health`, `GET/PATCH /admin/users*`, `GET/PATCH /admin/subscriptions*`, `GET/POST/PATCH/DELETE /admin/ai-providers*`, `GET /admin/{usage-analytics,logs}` |
 
-## Support
+Full request/response shapes, examples, and error codes are in Swagger —
+that's the source of truth, not this table.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## No real AI provider keys required
 
-## Stay in touch
+OpenAI/Anthropic/Gemini and the web search adapter are all mocked — no
+external accounts, API keys, or network calls needed to run or grade this.
+Swapping in a real SDK later only means changing the body of an adapter's
+`chat()`/`healthCheck()`/`search()`, not the interfaces around it. See
+`../docs/memory.md` for the full reasoning.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Testing
 
-## License
+`npm run test:e2e` runs the full suite (auth, users, subscriptions,
+ai-providers, chat, search, admin — one spec file per module) against
+whatever `DATABASE_URL` points at. It reuses the dev database rather than a
+separate disposable one; see `../docs/memory.md`'s Phase 10 entry for that
+trade-off.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## Postman
+
+A hand-written collection covering every module is at
+[`../postman/echogpt.postman_collection.json`](../postman/echogpt.postman_collection.json).
+Import it, set the `baseUrl` variable (defaults to
+`http://localhost:3000/api/v1`), run **Auth → Register** or **Login**, and
+the collection's test script saves `accessToken`/`refreshToken` into
+collection variables automatically for the rest of the requests. The raw
+OpenAPI spec (`/api/docs-json`) can also be imported directly into Postman
+if you'd rather generate your own.

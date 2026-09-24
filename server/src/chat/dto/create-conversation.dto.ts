@@ -8,7 +8,10 @@ export class CreateConversationDto {
   @MinLength(1)
   title?: string;
 
-  @ApiPropertyOptional({ description: 'A provider id to use for this conversation; falls back to your default' })
+  @ApiPropertyOptional({
+    description:
+      'A provider id to use for this conversation; falls back to your default',
+  })
   @IsOptional()
   @IsString()
   providerId?: string;

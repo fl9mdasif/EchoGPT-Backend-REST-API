@@ -30,7 +30,13 @@ import { AdminModule } from './admin/admin.module.js';
     ConfigModule.forRoot({
       isGlobal: true,
       validate: validateEnv,
-      load: [appConfig, databaseConfig, jwtConfig, securityConfig, throttleConfig],
+      load: [
+        appConfig,
+        databaseConfig,
+        jwtConfig,
+        securityConfig,
+        throttleConfig,
+      ],
     }),
     ThrottlerModule.forRoot([
       {

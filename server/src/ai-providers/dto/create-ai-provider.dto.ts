@@ -1,5 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
 import { ProviderType } from '../../generated/prisma/enums.js';
 
 export class CreateAiProviderDto {
@@ -12,7 +18,10 @@ export class CreateAiProviderDto {
   @IsEnum(ProviderType)
   type!: ProviderType;
 
-  @ApiPropertyOptional({ example: 'sk-...', description: 'Stored encrypted; never returned as-is' })
+  @ApiPropertyOptional({
+    example: 'sk-...',
+    description: 'Stored encrypted; never returned as-is',
+  })
   @IsOptional()
   @IsString()
   @MinLength(8)

@@ -1,8 +1,19 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { decryptSecret, encryptSecret, maskSecret } from '../common/crypto/encryption.util.js';
+import {
+  decryptSecret,
+  encryptSecret,
+  maskSecret,
+} from '../common/crypto/encryption.util.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import type { AiProviderAdapter, ProviderHealth } from './adapters/ai-provider-adapter.interface.js';
+import type {
+  AiProviderAdapter,
+  ProviderHealth,
+} from './adapters/ai-provider-adapter.interface.js';
 import type { AiProviderDto } from './dto/ai-provider.dto.js';
 import type { CreateAiProviderDto } from './dto/create-ai-provider.dto.js';
 import type { UpdateAiProviderDto } from './dto/update-ai-provider.dto.js';
@@ -19,13 +30,18 @@ export class AiProvidersService {
   /** A user's own providers, plus enabled global ones they can select from. */
   async listForUser(userId: string): Promise<AiProviderDto[]> {
     const providers = await this.prisma.aiProvider.findMany({
-      where: { OR: [{ ownerUserId: userId }, { ownerUserId: null, isEnabled: true }] },
+      where: {
+        OR: [{ ownerUserId: userId }, { ownerUserId: null, isEnabled: true }],
+      },
       orderBy: { createdAt: 'asc' },
     });
     return providers.map((p) => this.toDto(p));
   }
 
-  async create(userId: string, dto: CreateAiProviderDto): Promise<AiProviderDto> {
+  async create(
+    userId: string,
+    dto: CreateAiProviderDto,
+  ): Promise<AiProviderDto> {
     const { apiKeyEncrypted, apiKeyPreview } = this.encryptApiKey(dto.apiKey);
 
     if (dto.isDefault) {
@@ -46,7 +62,11 @@ export class AiProvidersService {
     return this.toDto(provider);
   }
 
-  async update(userId: string, id: string, dto: UpdateAiProviderDto): Promise<AiProviderDto> {
+  async update(
+    userId: string,
+    id: string,
+    dto: UpdateAiProviderDto,
+  ): Promise<AiProviderDto> {
     await this.findOwnedOrThrow(userId, id);
 
     if (dto.isDefault) {
@@ -54,7 +74,9 @@ export class AiProvidersService {
     }
 
     const keyUpdate =
-      dto.apiKey !== undefined ? this.encryptApiKey(dto.apiKey) : { apiKeyEncrypted: undefined, apiKeyPreview: undefined };
+      dto.apiKey !== undefined
+        ? this.encryptApiKey(dto.apiKey)
+        : { apiKeyEncrypted: undefined, apiKeyPreview: undefined };
 
     const provider = await this.prisma.aiProvider.update({
       where: { id },
@@ -104,7 +126,10 @@ export class AiProvidersService {
     return this.toDto(provider);
   }
 
-  async updateGlobal(id: string, dto: UpdateAiProviderDto): Promise<AiProviderDto> {
+  async updateGlobal(
+    id: string,
+    dto: UpdateAiProviderDto,
+  ): Promise<AiProviderDto> {
     await this.findGlobalOrThrow(id);
 
     if (dto.isDefault) {
@@ -112,11 +137,18 @@ export class AiProvidersService {
     }
 
     const keyUpdate =
-      dto.apiKey !== undefined ? this.encryptApiKey(dto.apiKey) : { apiKeyEncrypted: undefined, apiKeyPreview: undefined };
+      dto.apiKey !== undefined
+        ? this.encryptApiKey(dto.apiKey)
+        : { apiKeyEncrypted: undefined, apiKeyPreview: undefined };
 
     const provider = await this.prisma.aiProvider.update({
       where: { id },
-      data: { name: dto.name, isEnabled: dto.isEnabled, isDefault: dto.isDefault, ...keyUpdate },
+      data: {
+        name: dto.name,
+        isEnabled: dto.isEnabled,
+        isDefault: dto.isDefault,
+        ...keyUpdate,
+      },
     });
     return this.toDto(provider);
   }
@@ -161,7 +193,11 @@ export class AiProvidersService {
   async resolveForDispatch(
     userId: string,
     explicitProviderId?: string,
-  ): Promise<{ adapter: AiProviderAdapter; apiKey: string | null; providerId: string }> {
+  ): Promise<{
+    adapter: AiProviderAdapter;
+    apiKey: string | null;
+    providerId: string;
+  }> {
     const provider = explicitProviderId
       ? await this.findVisibleOrThrow(userId, explicitProviderId)
       : await this.findDefaultOrThrow(userId);
@@ -179,7 +215,10 @@ export class AiProvidersService {
 
   private decryptKey(apiKeyEncrypted: string | null): string | null {
     return apiKeyEncrypted
-      ? decryptSecret(apiKeyEncrypted, this.config.get<string>('security.encryptionKey')!)
+      ? decryptSecret(
+          apiKeyEncrypted,
+          this.config.get<string>('security.encryptionKey')!,
+        )
       : null;
   }
 
@@ -228,7 +267,10 @@ export class AiProvidersService {
 
   private async findVisibleOrThrow(userId: string, id: string) {
     const provider = await this.prisma.aiProvider.findUnique({ where: { id } });
-    if (!provider || (provider.ownerUserId !== userId && provider.ownerUserId !== null)) {
+    if (
+      !provider ||
+      (provider.ownerUserId !== userId && provider.ownerUserId !== null)
+    ) {
       throw new NotFoundException('AI provider not found');
     }
     return provider;

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { ChangePasswordDto } from './dto/change-password.dto.js';
@@ -16,7 +20,10 @@ export class UsersService {
     return this.toProfileDto(user);
   }
 
-  async updateProfile(userId: string, dto: UpdateProfileDto): Promise<UserProfileDto> {
+  async updateProfile(
+    userId: string,
+    dto: UpdateProfileDto,
+  ): Promise<UserProfileDto> {
     await this.findActiveUserOrThrow(userId);
     const user = await this.prisma.user.update({
       where: { id: userId },
@@ -28,7 +35,10 @@ export class UsersService {
   async changePassword(userId: string, dto: ChangePasswordDto): Promise<void> {
     const user = await this.findActiveUserOrThrow(userId);
 
-    const currentMatches = await bcrypt.compare(dto.currentPassword, user.passwordHash);
+    const currentMatches = await bcrypt.compare(
+      dto.currentPassword,
+      user.passwordHash,
+    );
     if (!currentMatches) {
       throw new UnauthorizedException('Current password is incorrect');
     }
@@ -38,7 +48,10 @@ export class UsersService {
     // Changing the password invalidates every other session: revoke all
     // outstanding refresh tokens so a stolen one can't outlive this change.
     await this.prisma.$transaction([
-      this.prisma.user.update({ where: { id: userId }, data: { passwordHash } }),
+      this.prisma.user.update({
+        where: { id: userId },
+        data: { passwordHash },
+      }),
       this.prisma.refreshToken.updateMany({
         where: { userId, revokedAt: null },
         data: { revokedAt: new Date() },
@@ -50,7 +63,10 @@ export class UsersService {
     await this.findActiveUserOrThrow(userId);
 
     await this.prisma.$transaction([
-      this.prisma.user.update({ where: { id: userId }, data: { deletedAt: new Date() } }),
+      this.prisma.user.update({
+        where: { id: userId },
+        data: { deletedAt: new Date() },
+      }),
       this.prisma.refreshToken.updateMany({
         where: { userId, revokedAt: null },
         data: { revokedAt: new Date() },

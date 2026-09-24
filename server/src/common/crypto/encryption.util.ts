@@ -12,7 +12,10 @@ export function encryptSecret(plaintext: string, hexKey: string): string {
   const key = Buffer.from(hexKey, 'hex');
   const iv = randomBytes(IV_LENGTH);
   const cipher = createCipheriv(ALGORITHM, key, iv);
-  const ciphertext = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
+  const ciphertext = Buffer.concat([
+    cipher.update(plaintext, 'utf8'),
+    cipher.final(),
+  ]);
   const authTag = cipher.getAuthTag();
   return [iv, authTag, ciphertext].map((buf) => buf.toString('hex')).join(':');
 }

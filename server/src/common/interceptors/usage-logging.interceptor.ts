@@ -39,7 +39,10 @@ export class UsageLoggingInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       catchError((error: unknown) => {
-        statusCode = error instanceof HttpException ? error.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
+        statusCode =
+          error instanceof HttpException
+            ? error.getStatus()
+            : HttpStatus.INTERNAL_SERVER_ERROR;
         return throwError(() => error);
       }),
       finalize(() => {
@@ -61,8 +64,14 @@ export class UsageLoggingInterceptor implements NestInterceptor {
     );
   }
 
-  private resolveDefaultStatus(context: ExecutionContext, method: string): number {
-    const explicit = this.reflector.get<number>(HTTP_CODE_METADATA, context.getHandler());
+  private resolveDefaultStatus(
+    context: ExecutionContext,
+    method: string,
+  ): number {
+    const explicit = this.reflector.get<number>(
+      HTTP_CODE_METADATA,
+      context.getHandler(),
+    );
     if (explicit !== undefined) return explicit;
     return method === 'POST' ? HttpStatus.CREATED : HttpStatus.OK;
   }

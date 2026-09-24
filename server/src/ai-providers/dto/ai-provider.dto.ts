@@ -11,7 +11,11 @@ export class AiProviderDto {
   @ApiProperty({ enum: ProviderType, example: ProviderType.OPENAI })
   type!: ProviderType;
 
-  @ApiPropertyOptional({ example: 'sk-a••••cd12', nullable: true, description: 'Masked; the real key is never returned' })
+  @ApiPropertyOptional({
+    example: 'sk-a••••cd12',
+    nullable: true,
+    description: 'Masked; the real key is never returned',
+  })
   apiKeyPreview!: string | null;
 
   @ApiProperty()
@@ -20,7 +24,10 @@ export class AiProviderDto {
   @ApiProperty()
   isDefault!: boolean;
 
-  @ApiPropertyOptional({ nullable: true, description: 'null means a global provider, not owned by any single user' })
+  @ApiPropertyOptional({
+    nullable: true,
+    description: 'null means a global provider, not owned by any single user',
+  })
   ownerUserId!: string | null;
 
   @ApiProperty()

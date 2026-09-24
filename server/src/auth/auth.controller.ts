@@ -1,4 +1,13 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { Public } from '../common/decorators/public.decorator.js';
@@ -22,7 +31,9 @@ export class AuthController {
   @Throttle(AUTH_THROTTLE)
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Register a new user (creates a FREE subscription)' })
+  @ApiOperation({
+    summary: 'Register a new user (creates a FREE subscription)',
+  })
   @ApiResponse({ status: 201, type: AuthResponseDto })
   @ApiResponse({ status: 409, description: 'Email already registered' })
   register(@Body() dto: RegisterDto): Promise<AuthResponseDto> {
@@ -44,7 +55,10 @@ export class AuthController {
   @UseGuards(JwtRefreshGuard)
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Exchange a refresh token for a new access/refresh pair (rotates it)' })
+  @ApiOperation({
+    summary:
+      'Exchange a refresh token for a new access/refresh pair (rotates it)',
+  })
   @ApiResponse({ status: 200, type: TokenPairDto })
   @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
   refresh(
@@ -61,16 +75,27 @@ export class AuthController {
   @ApiOperation({ summary: 'Revoke a refresh token' })
   @ApiResponse({ status: 204, description: 'Refresh token revoked' })
   @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
-  async logout(@Body() _dto: RefreshTokenDto, @CurrentUser() user: RefreshTokenContext): Promise<void> {
+  async logout(
+    @Body() _dto: RefreshTokenDto,
+    @CurrentUser() user: RefreshTokenContext,
+  ): Promise<void> {
     await this.authService.logout(user.tokenId);
   }
 
   @Public()
   @Get('verify-email')
-  @ApiOperation({ summary: 'Verify email using the token issued at registration (bonus feature)' })
+  @ApiOperation({
+    summary:
+      'Verify email using the token issued at registration (bonus feature)',
+  })
   @ApiResponse({ status: 200, description: 'Email verified' })
-  @ApiResponse({ status: 400, description: 'Invalid or expired verification token' })
-  async verifyEmail(@Query('token') token: string): Promise<{ verified: true }> {
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid or expired verification token',
+  })
+  async verifyEmail(
+    @Query('token') token: string,
+  ): Promise<{ verified: true }> {
     await this.authService.verifyEmail(token);
     return { verified: true };
   }

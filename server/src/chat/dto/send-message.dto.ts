@@ -15,7 +15,8 @@ export class SendMessageDto {
   content!: string;
 
   @ApiPropertyOptional({
-    description: 'Override the provider for this message only (else conversation/default provider is used)',
+    description:
+      'Override the provider for this message only (else conversation/default provider is used)',
   })
   @IsOptional()
   @IsString()

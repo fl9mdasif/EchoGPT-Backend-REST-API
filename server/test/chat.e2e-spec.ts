@@ -20,7 +20,11 @@ describe('Chat (e2e)', () => {
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('api/v1');
     app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
     );
     await app.init();
 
@@ -35,7 +39,9 @@ describe('Chat (e2e)', () => {
   });
 
   it('rejects an unauthenticated request with 401', async () => {
-    const response = await request(app.getHttpServer()).get('/api/v1/chat/conversations');
+    const response = await request(app.getHttpServer()).get(
+      '/api/v1/chat/conversations',
+    );
     expect(response.status).toBe(401);
   });
 
@@ -58,7 +64,9 @@ describe('Chat (e2e)', () => {
     expect(response.status).toBe(201);
     expect(response.body.data.userMessage.content).toBe('Hello, EchoGPT!');
     expect(response.body.data.assistantMessage.role).toBe('ASSISTANT');
-    expect(response.body.data.assistantMessage.content).toContain('Hello, EchoGPT!');
+    expect(response.body.data.assistantMessage.content).toContain(
+      'Hello, EchoGPT!',
+    );
     conversationId = response.body.data.conversationId;
   });
 
@@ -102,22 +110,18 @@ describe('Chat (e2e)', () => {
     expect(afterUsage.body.data.requestsUsed).toBe(2);
   });
 
-  it(
-    'bonus: streams a chat response via SSE',
-    async () => {
-      const response = await request(app.getHttpServer())
-        .get('/api/v1/chat/send/stream')
-        .query({ content: 'Stream this please' })
-        .set('Authorization', `Bearer ${accessToken}`);
+  it('bonus: streams a chat response via SSE', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/chat/send/stream')
+      .query({ content: 'Stream this please' })
+      .set('Authorization', `Bearer ${accessToken}`);
 
-      expect(response.status).toBe(200);
-      expect(response.headers['content-type']).toContain('text/event-stream');
-      expect(response.text).toContain('event: conversation');
-      expect(response.text).toContain('event: chunk');
-      expect(response.text).toContain('event: done');
-    },
-    15_000,
-  );
+    expect(response.status).toBe(200);
+    expect(response.headers['content-type']).toContain('text/event-stream');
+    expect(response.text).toContain('event: conversation');
+    expect(response.text).toContain('event: chunk');
+    expect(response.text).toContain('event: done');
+  }, 15_000);
 
   it("404s sending to someone else's/a nonexistent conversation id", async () => {
     const response = await request(app.getHttpServer())
@@ -128,31 +132,27 @@ describe('Chat (e2e)', () => {
     expect(response.status).toBe(404);
   });
 
-  it(
-    'blocks further sends once the FREE plan limit (50 requests) is reached',
-    async () => {
-      const limitEmail = `limit-${randomUUID()}@echogpt.dev`;
-      const limitRegister = await request(app.getHttpServer())
-        .post('/api/v1/auth/register')
-        .send({ email: limitEmail, password });
-      const limitToken = limitRegister.body.data.accessToken as string;
+  it('blocks further sends once the FREE plan limit (50 requests) is reached', async () => {
+    const limitEmail = `limit-${randomUUID()}@echogpt.dev`;
+    const limitRegister = await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({ email: limitEmail, password });
+    const limitToken = limitRegister.body.data.accessToken as string;
 
-      for (let i = 0; i < 50; i++) {
-        const response = await request(app.getHttpServer())
-          .post('/api/v1/chat/send')
-          .set('Authorization', `Bearer ${limitToken}`)
-          .send({ content: `message ${i}` });
-        expect(response.status).toBe(201);
-      }
-
-      const blockedResponse = await request(app.getHttpServer())
+    for (let i = 0; i < 50; i++) {
+      const response = await request(app.getHttpServer())
         .post('/api/v1/chat/send')
         .set('Authorization', `Bearer ${limitToken}`)
-        .send({ content: 'one too many' });
-      expect(blockedResponse.status).toBe(403);
-    },
-    60_000,
-  );
+        .send({ content: `message ${i}` });
+      expect(response.status).toBe(201);
+    }
+
+    const blockedResponse = await request(app.getHttpServer())
+      .post('/api/v1/chat/send')
+      .set('Authorization', `Bearer ${limitToken}`)
+      .send({ content: 'one too many' });
+    expect(blockedResponse.status).toBe(403);
+  }, 60_000);
 
   it('deletes the conversation', async () => {
     const response = await request(app.getHttpServer())

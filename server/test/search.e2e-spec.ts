@@ -19,7 +19,11 @@ describe('Search (e2e)', () => {
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('api/v1');
     app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
     );
     await app.init();
 
@@ -34,7 +38,9 @@ describe('Search (e2e)', () => {
   });
 
   it('rejects an unauthenticated request with 401', async () => {
-    const response = await request(app.getHttpServer()).post('/api/v1/search').send({ query: 'x' });
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/search')
+      .send({ query: 'x' });
     expect(response.status).toBe(401);
   });
 
@@ -67,7 +73,9 @@ describe('Search (e2e)', () => {
     const afterUsage = await request(app.getHttpServer())
       .get('/api/v1/subscriptions/usage')
       .set('Authorization', `Bearer ${accessToken}`);
-    expect(afterUsage.body.data.requestsUsed).toBe(beforeUsage.body.data.requestsUsed);
+    expect(afterUsage.body.data.requestsUsed).toBe(
+      beforeUsage.body.data.requestsUsed,
+    );
   });
 
   it('lists search history with the two distinct queries', async () => {
@@ -90,7 +98,9 @@ describe('Search (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`);
 
     expect(response.status).toBe(200);
-    expect(response.body.data[0].query).toBe('best budget laptops for students');
+    expect(response.body.data[0].query).toBe(
+      'best budget laptops for students',
+    );
   });
 
   it('suggests past queries matching a prefix', async () => {
@@ -100,8 +110,12 @@ describe('Search (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`);
 
     expect(response.status).toBe(200);
-    expect(response.body.data.suggestions).toContain('best budget laptops 2026');
-    expect(response.body.data.suggestions).toContain('best budget laptops for students');
+    expect(response.body.data.suggestions).toContain(
+      'best budget laptops 2026',
+    );
+    expect(response.body.data.suggestions).toContain(
+      'best budget laptops for students',
+    );
   });
 
   it('returns no suggestions for an empty prefix', async () => {

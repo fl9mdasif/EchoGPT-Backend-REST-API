@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { PaginationMetaDto } from '../../common/dto/pagination-meta.dto.js';
 
 export class SearchResultItemDto {
-  @ApiProperty({ example: 'Best budget laptops of 2026 — a buyer\'s guide' })
+  @ApiProperty({ example: "Best budget laptops of 2026 — a buyer's guide" })
   title!: string;
 
   @ApiProperty({ example: 'https://example.com/best-budget-laptops-2026' })
@@ -16,7 +16,10 @@ export class SearchResponseDto {
   @ApiProperty({ example: 'best budget laptops 2026' })
   query!: string;
 
-  @ApiProperty({ description: 'true if served from the recent-query cache instead of re-searching' })
+  @ApiProperty({
+    description:
+      'true if served from the recent-query cache instead of re-searching',
+  })
   cached!: boolean;
 
   @ApiProperty({ type: [SearchResultItemDto] })
@@ -43,6 +46,9 @@ export class SearchHistoryListDto {
 }
 
 export class SearchSuggestionsDto {
-  @ApiProperty({ type: [String], example: ['best budget laptops 2026', 'best budget laptops for students'] })
+  @ApiProperty({
+    type: [String],
+    example: ['best budget laptops 2026', 'best budget laptops for students'],
+  })
   suggestions!: string[];
 }

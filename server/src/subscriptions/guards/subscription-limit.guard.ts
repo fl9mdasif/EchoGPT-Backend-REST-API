@@ -1,4 +1,8 @@
-import { ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import type { Request } from 'express';
 import type { CurrentUserPayload } from '../../auth/interfaces/jwt-payload.interface.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
@@ -23,8 +27,13 @@ export class SubscriptionLimitGuard {
       where: { userId: user.userId },
     });
 
-    if (!subscription || subscription.requestsUsed >= subscription.requestsLimit) {
-      throw new ForbiddenException('Request limit reached for your current plan');
+    if (
+      !subscription ||
+      subscription.requestsUsed >= subscription.requestsLimit
+    ) {
+      throw new ForbiddenException(
+        'Request limit reached for your current plan',
+      );
     }
     return true;
   }

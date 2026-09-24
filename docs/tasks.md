@@ -4,6 +4,10 @@ Living checklist. Each phase = one or more commits, pushed after it builds and
 (where applicable) tests pass. Check items off as they land. Don't start a
 phase's cleanup/polish items before its core functionality works end-to-end.
 
+**Status: all 10 phases complete (2026-09-24).** Build/lint/e2e all pass;
+verified end-to-end via `docker compose up -d --build` after every phase.
+See `docs/memory.md` for the full decisions/gotchas log.
+
 ## Phase 0 — Planning
 - [x] docs/prd.md
 - [x] docs/architechture.md
@@ -136,14 +140,22 @@ phase's cleanup/polish items before its core functionality works end-to-end.
 - [x] Commit: `feat(admin): dashboard, user/subscription/provider admin, logs`
 
 ## Phase 10 — Docs, tests, polish
-- [ ] Swagger: examples + error responses on every route
-- [ ] README.md: setup, run, migrate, seed, test instructions
-- [ ] Postman collection export (optional)
-- [ ] e2e coverage for each module's happy path
-- [ ] Final review pass against docs/rules.md checklist
-- [ ] Commit: `docs: finalize README, swagger examples, postman collection`
+- [x] Swagger: `@ApiOperation`/`@ApiResponse`/`@ApiProperty` examples across
+      every controller and DTO (34 routes, 41 schemas at `/api/docs-json`)
+- [x] `server/README.md` rewritten (was still Nest's CLI boilerplate):
+      setup, migrate, seed, run, scripts, project layout, API route table
+- [x] Root `README.md` trimmed to a pointer + quick start
+- [x] Postman collection (bonus) — `postman/echogpt.postman_collection.json`,
+      one folder per module, auto-saves tokens via a test script on
+      Register/Login/Refresh
+- [x] e2e coverage for every module's happy path (51 tests total across 8
+      spec files — see each phase's entry above for what each covers)
+- [x] Prettier formatting pass (`npm run format`) across `src/` and `test/`
+- [x] Final review against `docs/rules.md` — see the Phase 10 memory entry
+      for the one known gap (shared dev DB for e2e, not a disposable one)
+- [x] Commit: `docs: finalize README, swagger examples, postman collection`
 
-## Backlog / stretch (only if time remains before 2026-09-29)
-- [ ] Streaming chat over SSE polish
-- [ ] Search result caching with TTL
+## Backlog / stretch (not done — time-permitting only, not required by the brief)
+- [ ] Disposable/reset test database for e2e runs (currently reuses dev DB)
+- [ ] GitHub Actions CI (lint + test on push)
 - [ ] GitHub Actions CI (lint + test on push)

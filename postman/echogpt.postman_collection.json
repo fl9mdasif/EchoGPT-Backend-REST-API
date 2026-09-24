@@ -1,0 +1,285 @@
+{
+  "info": {
+    "name": "EchoGPT Backend API",
+    "description": "AppifyDevs backend internship assignment. Run Auth > Register (or Login) first — its test script saves accessToken/refreshToken into collection variables for every other request.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000/api/v1" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" },
+    { "key": "conversationId", "value": "" },
+    { "key": "providerId", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Liveness check",
+          "request": { "method": "GET", "url": "{{baseUrl}}/health", "auth": { "type": "noauth" } }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body?.data?.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', body.data.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', body.data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/register",
+            "auth": { "type": "noauth" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"postman-{{$timestamp}}@echogpt.dev\",\n  \"password\": \"StrongPassw0rd!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body?.data?.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', body.data.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', body.data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "auth": { "type": "noauth" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@echogpt.dev\",\n  \"password\": \"ChangeMe123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body?.data?.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', body.data.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', body.data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/refresh",
+            "auth": { "type": "noauth" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/logout",
+            "auth": { "type": "noauth" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" }
+          }
+        },
+        {
+          "name": "Verify email",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/auth/verify-email?token=REPLACE_WITH_TOKEN_FROM_SERVER_LOG", "host": ["{{baseUrl}}"], "path": ["auth", "verify-email"], "query": [{ "key": "token", "value": "REPLACE_WITH_TOKEN_FROM_SERVER_LOG" }] },
+            "auth": { "type": "noauth" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        { "name": "Get my profile", "request": { "method": "GET", "url": "{{baseUrl}}/users/me" } },
+        {
+          "name": "Update my profile",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/users/me",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Jane Doe\"\n}" }
+          }
+        },
+        {
+          "name": "Change password",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/users/me/password",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"currentPassword\": \"StrongPassw0rd!\",\n  \"newPassword\": \"NewStrongPassw0rd!\"\n}" }
+          }
+        },
+        { "name": "Delete my account", "request": { "method": "DELETE", "url": "{{baseUrl}}/users/me" } }
+      ]
+    },
+    {
+      "name": "Subscriptions",
+      "item": [
+        { "name": "Get my subscription", "request": { "method": "GET", "url": "{{baseUrl}}/subscriptions/me" } },
+        { "name": "Get usage/remaining requests", "request": { "method": "GET", "url": "{{baseUrl}}/subscriptions/usage" } },
+        { "name": "Upgrade to PREMIUM", "request": { "method": "POST", "url": "{{baseUrl}}/subscriptions/upgrade" } },
+        { "name": "Downgrade to FREE", "request": { "method": "POST", "url": "{{baseUrl}}/subscriptions/downgrade" } }
+      ]
+    },
+    {
+      "name": "AI Providers",
+      "item": [
+        { "name": "List my + global providers", "request": { "method": "GET", "url": "{{baseUrl}}/ai-providers" } },
+        {
+          "name": "Add a provider",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["const body = pm.response.json();", "if (body?.data?.id) pm.collectionVariables.set('providerId', body.data.id);"] }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/ai-providers",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"My OpenAI key\",\n  \"type\": \"OPENAI\",\n  \"apiKey\": \"sk-example-1234567890\",\n  \"isDefault\": true\n}" }
+          }
+        },
+        {
+          "name": "Edit a provider",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/ai-providers/{{providerId}}",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Renamed key\"\n}" }
+          }
+        },
+        { "name": "Provider health check", "request": { "method": "GET", "url": "{{baseUrl}}/ai-providers/{{providerId}}/health" } },
+        { "name": "Delete a provider", "request": { "method": "DELETE", "url": "{{baseUrl}}/ai-providers/{{providerId}}" } }
+      ]
+    },
+    {
+      "name": "Chat",
+      "item": [
+        { "name": "List conversations", "request": { "method": "GET", "url": "{{baseUrl}}/chat/conversations?page=1&limit=20" } },
+        {
+          "name": "Start a conversation",
+          "event": [
+            { "listen": "test", "script": { "exec": ["const body = pm.response.json();", "if (body?.data?.id) pm.collectionVariables.set('conversationId', body.data.id);"] } }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/chat/conversations",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Trip planning\"\n}" }
+          }
+        },
+        {
+          "name": "Send a prompt",
+          "event": [
+            { "listen": "test", "script": { "exec": ["const body = pm.response.json();", "if (body?.data?.conversationId) pm.collectionVariables.set('conversationId', body.data.conversationId);"] } }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/chat/send",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"conversationId\": \"{{conversationId}}\",\n  \"content\": \"What is the capital of France?\"\n}" }
+          }
+        },
+        { "name": "Send a prompt (streaming, SSE bonus)", "request": { "method": "GET", "url": "{{baseUrl}}/chat/send/stream?content=Stream this please" } },
+        { "name": "List messages in a conversation", "request": { "method": "GET", "url": "{{baseUrl}}/chat/conversations/{{conversationId}}/messages" } },
+        { "name": "Delete a conversation", "request": { "method": "DELETE", "url": "{{baseUrl}}/chat/conversations/{{conversationId}}" } }
+      ]
+    },
+    {
+      "name": "Search",
+      "item": [
+        {
+          "name": "Run a search",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/search",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"query\": \"best budget laptops 2026\"\n}" }
+          }
+        },
+        { "name": "Search history", "request": { "method": "GET", "url": "{{baseUrl}}/search/history?page=1&limit=20" } },
+        { "name": "Recent searches", "request": { "method": "GET", "url": "{{baseUrl}}/search/recent" } },
+        { "name": "Search suggestions", "request": { "method": "GET", "url": "{{baseUrl}}/search/suggestions?q=best budget" } }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        { "name": "Dashboard", "request": { "method": "GET", "url": "{{baseUrl}}/admin/dashboard" } },
+        { "name": "System health", "request": { "method": "GET", "url": "{{baseUrl}}/admin/system-health" } },
+        { "name": "List/search users", "request": { "method": "GET", "url": "{{baseUrl}}/admin/users?page=1&limit=20" } },
+        {
+          "name": "Disable/reactivate a user",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/admin/users/REPLACE_WITH_USER_ID",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"isActive\": false\n}" }
+          }
+        },
+        { "name": "List subscriptions", "request": { "method": "GET", "url": "{{baseUrl}}/admin/subscriptions?page=1&limit=20" } },
+        {
+          "name": "Override a subscription",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/admin/subscriptions/REPLACE_WITH_USER_ID",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"requestsLimit\": 500\n}" }
+          }
+        },
+        { "name": "List global AI providers", "request": { "method": "GET", "url": "{{baseUrl}}/admin/ai-providers" } },
+        {
+          "name": "Add a global AI provider",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/admin/ai-providers",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"System default OpenAI\",\n  \"type\": \"OPENAI\",\n  \"isDefault\": true\n}" }
+          }
+        },
+        { "name": "Usage analytics", "request": { "method": "GET", "url": "{{baseUrl}}/admin/usage-analytics" } },
+        { "name": "Request logs", "request": { "method": "GET", "url": "{{baseUrl}}/admin/logs?page=1&limit=20" } }
+      ]
+    }
+  ]
+}

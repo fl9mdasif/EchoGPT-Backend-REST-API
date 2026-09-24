@@ -31,7 +31,10 @@ export class UsageDto {
   @ApiProperty({ example: 50 })
   requestsLimit!: number;
 
-  @ApiProperty({ example: 38, description: 'requestsLimit - requestsUsed, floored at 0' })
+  @ApiProperty({
+    example: 38,
+    description: 'requestsLimit - requestsUsed, floored at 0',
+  })
   remaining!: number;
 
   @ApiPropertyOptional({ example: '2026-10-24T00:00:00.000Z', nullable: true })

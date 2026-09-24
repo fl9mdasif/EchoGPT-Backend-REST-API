@@ -9,7 +9,9 @@ export class AdminUserDto {
   @ApiPropertyOptional({ nullable: true }) name!: string | null;
   @ApiProperty({ enum: Role }) role!: Role;
   @ApiProperty() isEmailVerified!: boolean;
-  @ApiProperty({ description: 'false means the account is soft-deleted/disabled' })
+  @ApiProperty({
+    description: 'false means the account is soft-deleted/disabled',
+  })
   isActive!: boolean;
   @ApiProperty() createdAt!: Date;
 }
@@ -28,7 +30,9 @@ export class UpdateAdminUserDto {
   @IsEnum(Role)
   role?: Role;
 
-  @ApiPropertyOptional({ description: 'Set false to disable the account, true to reactivate it' })
+  @ApiPropertyOptional({
+    description: 'Set false to disable the account, true to reactivate it',
+  })
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;

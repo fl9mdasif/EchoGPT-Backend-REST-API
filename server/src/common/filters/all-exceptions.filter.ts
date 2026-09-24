@@ -33,9 +33,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const body: ErrorResponseBody = {
       statusCode,
       message: this.extractMessage(exception, isHttpException),
-      error: isHttpException
-        ? exception.name
-        : 'InternalServerError',
+      error: isHttpException ? exception.name : 'InternalServerError',
       path: request.url,
       timestamp: new Date().toISOString(),
     };

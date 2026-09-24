@@ -1,5 +1,21 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AiProvidersService } from '../ai-providers/ai-providers.service.js';
 import { AiProviderDto } from '../ai-providers/dto/ai-provider.dto.js';
 import { CreateAiProviderDto } from '../ai-providers/dto/create-ai-provider.dto.js';
@@ -9,10 +25,24 @@ import { PaginationQueryDto } from '../common/dto/pagination-query.dto.js';
 import { Role } from '../generated/prisma/enums.js';
 import { AdminService } from './admin.service.js';
 import { AdminUserQueryDto } from './dto/admin-user-query.dto.js';
-import { AdminDashboardDto, AdminSystemHealthDto } from './dto/admin-dashboard.dto.js';
-import { AdminSubscriptionDto, AdminSubscriptionListDto, UpdateAdminSubscriptionDto } from './dto/admin-subscription.dto.js';
-import { AdminUserDto, AdminUserListDto, UpdateAdminUserDto } from './dto/admin-user.dto.js';
-import { AdminLogListDto, AdminUsageAnalyticsDto } from './dto/admin-usage.dto.js';
+import {
+  AdminDashboardDto,
+  AdminSystemHealthDto,
+} from './dto/admin-dashboard.dto.js';
+import {
+  AdminSubscriptionDto,
+  AdminSubscriptionListDto,
+  UpdateAdminSubscriptionDto,
+} from './dto/admin-subscription.dto.js';
+import {
+  AdminUserDto,
+  AdminUserListDto,
+  UpdateAdminUserDto,
+} from './dto/admin-user.dto.js';
+import {
+  AdminLogListDto,
+  AdminUsageAnalyticsDto,
+} from './dto/admin-usage.dto.js';
 
 @ApiTags('admin')
 @ApiBearerAuth()
@@ -46,22 +76,31 @@ export class AdminController {
   }
 
   @Patch('users/:id')
-  @ApiOperation({ summary: "Change a user's role, or disable/reactivate their account" })
+  @ApiOperation({
+    summary: "Change a user's role, or disable/reactivate their account",
+  })
   @ApiResponse({ status: 200, type: AdminUserDto })
   @ApiResponse({ status: 404, description: 'User not found' })
-  updateUser(@Param('id') id: string, @Body() dto: UpdateAdminUserDto): Promise<AdminUserDto> {
+  updateUser(
+    @Param('id') id: string,
+    @Body() dto: UpdateAdminUserDto,
+  ): Promise<AdminUserDto> {
     return this.adminService.updateUser(id, dto);
   }
 
   @Get('subscriptions')
   @ApiOperation({ summary: 'List all subscriptions' })
   @ApiResponse({ status: 200, type: AdminSubscriptionListDto })
-  listSubscriptions(@Query() query: PaginationQueryDto): Promise<AdminSubscriptionListDto> {
+  listSubscriptions(
+    @Query() query: PaginationQueryDto,
+  ): Promise<AdminSubscriptionListDto> {
     return this.adminService.listSubscriptions(query.page, query.limit);
   }
 
   @Patch('subscriptions/:userId')
-  @ApiOperation({ summary: "Override a user's subscription (plan, status, limits)" })
+  @ApiOperation({
+    summary: "Override a user's subscription (plan, status, limits)",
+  })
   @ApiResponse({ status: 200, type: AdminSubscriptionDto })
   @ApiResponse({ status: 404, description: 'Subscription not found' })
   updateSubscription(
@@ -79,9 +118,13 @@ export class AdminController {
   }
 
   @Post('ai-providers')
-  @ApiOperation({ summary: 'Add a global AI provider (visible to every user as a fallback)' })
+  @ApiOperation({
+    summary: 'Add a global AI provider (visible to every user as a fallback)',
+  })
   @ApiResponse({ status: 201, type: AiProviderDto })
-  createGlobalProvider(@Body() dto: CreateAiProviderDto): Promise<AiProviderDto> {
+  createGlobalProvider(
+    @Body() dto: CreateAiProviderDto,
+  ): Promise<AiProviderDto> {
     return this.aiProvidersService.createGlobal(dto);
   }
 
@@ -106,7 +149,10 @@ export class AdminController {
   }
 
   @Get('usage-analytics')
-  @ApiOperation({ summary: 'API usage analytics (request counts, latency, status mix, top endpoints)' })
+  @ApiOperation({
+    summary:
+      'API usage analytics (request counts, latency, status mix, top endpoints)',
+  })
   @ApiResponse({ status: 200, type: AdminUsageAnalyticsDto })
   usageAnalytics(): Promise<AdminUsageAnalyticsDto> {
     return this.adminService.getUsageAnalytics();

@@ -1,10 +1,24 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { toSkipTake } from '../common/pagination.util.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import type { AdminDashboardDto, AdminSystemHealthDto } from './dto/admin-dashboard.dto.js';
-import type { AdminSubscriptionDto, AdminSubscriptionListDto, UpdateAdminSubscriptionDto } from './dto/admin-subscription.dto.js';
-import type { AdminUserDto, AdminUserListDto, UpdateAdminUserDto } from './dto/admin-user.dto.js';
-import type { AdminLogListDto, AdminUsageAnalyticsDto } from './dto/admin-usage.dto.js';
+import type {
+  AdminDashboardDto,
+  AdminSystemHealthDto,
+} from './dto/admin-dashboard.dto.js';
+import type {
+  AdminSubscriptionDto,
+  AdminSubscriptionListDto,
+  UpdateAdminSubscriptionDto,
+} from './dto/admin-subscription.dto.js';
+import type {
+  AdminUserDto,
+  AdminUserListDto,
+  UpdateAdminUserDto,
+} from './dto/admin-user.dto.js';
+import type {
+  AdminLogListDto,
+  AdminUsageAnalyticsDto,
+} from './dto/admin-usage.dto.js';
 
 const TOP_ENDPOINTS_LIMIT = 5;
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
@@ -33,7 +47,9 @@ export class AdminService {
       this.prisma.conversation.count(),
       this.prisma.message.count(),
       this.prisma.searchQuery.count(),
-      this.prisma.apiUsageLog.count({ where: { createdAt: { gte: since24h } } }),
+      this.prisma.apiUsageLog.count({
+        where: { createdAt: { gte: since24h } },
+      }),
     ]);
 
     return {
@@ -64,7 +80,11 @@ export class AdminService {
     };
   }
 
-  async listUsers(page: number, limit: number, search?: string): Promise<AdminUserListDto> {
+  async listUsers(
+    page: number,
+    limit: number,
+    search?: string,
+  ): Promise<AdminUserListDto> {
     const { skip, take } = toSkipTake(page, limit);
     const where = search
       ? {
@@ -76,7 +96,12 @@ export class AdminService {
       : {};
 
     const [users, total] = await this.prisma.$transaction([
-      this.prisma.user.findMany({ where, orderBy: { createdAt: 'desc' }, skip, take }),
+      this.prisma.user.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take,
+      }),
       this.prisma.user.count({ where }),
     ]);
 
@@ -102,7 +127,12 @@ export class AdminService {
       where: { id },
       data: {
         role: dto.role,
-        deletedAt: dto.isActive === undefined ? undefined : dto.isActive ? null : new Date(),
+        deletedAt:
+          dto.isActive === undefined
+            ? undefined
+            : dto.isActive
+              ? null
+              : new Date(),
       },
     });
 
@@ -124,7 +154,10 @@ export class AdminService {
     };
   }
 
-  async listSubscriptions(page: number, limit: number): Promise<AdminSubscriptionListDto> {
+  async listSubscriptions(
+    page: number,
+    limit: number,
+  ): Promise<AdminSubscriptionListDto> {
     const { skip, take } = toSkipTake(page, limit);
     const [subscriptions, total] = await this.prisma.$transaction([
       this.prisma.subscription.findMany({
@@ -151,8 +184,13 @@ export class AdminService {
     };
   }
 
-  async updateSubscription(userId: string, dto: UpdateAdminSubscriptionDto): Promise<AdminSubscriptionDto> {
-    const existing = await this.prisma.subscription.findUnique({ where: { userId } });
+  async updateSubscription(
+    userId: string,
+    dto: UpdateAdminSubscriptionDto,
+  ): Promise<AdminSubscriptionDto> {
+    const existing = await this.prisma.subscription.findUnique({
+      where: { userId },
+    });
     if (!existing) throw new NotFoundException('Subscription not found');
 
     const subscription = await this.prisma.subscription.update({
@@ -181,9 +219,17 @@ export class AdminService {
   async getUsageAnalytics(): Promise<AdminUsageAnalyticsDto> {
     const since24h = new Date(Date.now() - ONE_DAY_MS);
 
-    const [totalRequests, requestsLast24h, avgLatency, statusRows, endpointRows] = await Promise.all([
+    const [
+      totalRequests,
+      requestsLast24h,
+      avgLatency,
+      statusRows,
+      endpointRows,
+    ] = await Promise.all([
       this.prisma.apiUsageLog.count(),
-      this.prisma.apiUsageLog.count({ where: { createdAt: { gte: since24h } } }),
+      this.prisma.apiUsageLog.count({
+        where: { createdAt: { gte: since24h } },
+      }),
       this.prisma.apiUsageLog.aggregate({ _avg: { latencyMs: true } }),
       this.prisma.apiUsageLog.findMany({ select: { statusCode: true } }),
       this.prisma.apiUsageLog.groupBy({
@@ -203,16 +249,24 @@ export class AdminService {
     return {
       totalRequests,
       requestsLast24h,
-      averageLatencyMs: Math.round((avgLatency._avg.latencyMs ?? 0) * 100) / 100,
+      averageLatencyMs:
+        Math.round((avgLatency._avg.latencyMs ?? 0) * 100) / 100,
       byStatusClass,
-      topEndpoints: endpointRows.map((row) => ({ endpoint: row.endpoint, count: row._count.endpoint })),
+      topEndpoints: endpointRows.map((row) => ({
+        endpoint: row.endpoint,
+        count: row._count.endpoint,
+      })),
     };
   }
 
   async getLogs(page: number, limit: number): Promise<AdminLogListDto> {
     const { skip, take } = toSkipTake(page, limit);
     const [data, total] = await this.prisma.$transaction([
-      this.prisma.apiUsageLog.findMany({ orderBy: { createdAt: 'desc' }, skip, take }),
+      this.prisma.apiUsageLog.findMany({
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take,
+      }),
       this.prisma.apiUsageLog.count(),
     ]);
     return { data, meta: { page, limit, total } };

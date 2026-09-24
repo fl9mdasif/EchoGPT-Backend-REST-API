@@ -5,9 +5,16 @@ import { AiProvidersService } from '../ai-providers/ai-providers.service.js';
 import type { ChatMessage } from '../ai-providers/adapters/ai-provider-adapter.interface.js';
 import { toSkipTake } from '../common/pagination.util.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import type { ConversationDto, ConversationListDto } from './dto/conversation.dto.js';
+import type {
+  ConversationDto,
+  ConversationListDto,
+} from './dto/conversation.dto.js';
 import type { CreateConversationDto } from './dto/create-conversation.dto.js';
-import type { MessageDto, MessageListDto, SendMessageResponseDto } from './dto/message.dto.js';
+import type {
+  MessageDto,
+  MessageListDto,
+  SendMessageResponseDto,
+} from './dto/message.dto.js';
 import type { SendMessageDto } from './dto/send-message.dto.js';
 
 @Injectable()
@@ -17,7 +24,11 @@ export class ChatService {
     private readonly aiProvidersService: AiProvidersService,
   ) {}
 
-  async listConversations(userId: string, page: number, limit: number): Promise<ConversationListDto> {
+  async listConversations(
+    userId: string,
+    page: number,
+    limit: number,
+  ): Promise<ConversationListDto> {
     const { skip, take } = toSkipTake(page, limit);
     const [data, total] = await this.prisma.$transaction([
       this.prisma.conversation.findMany({
@@ -28,15 +39,25 @@ export class ChatService {
       }),
       this.prisma.conversation.count({ where: { userId } }),
     ]);
-    return { data: data.map((c) => this.toConversationDto(c)), meta: { page, limit, total } };
+    return {
+      data: data.map((c) => this.toConversationDto(c)),
+      meta: { page, limit, total },
+    };
   }
 
-  async createConversation(userId: string, dto: CreateConversationDto): Promise<ConversationDto> {
+  async createConversation(
+    userId: string,
+    dto: CreateConversationDto,
+  ): Promise<ConversationDto> {
     if (dto.providerId) {
       await this.aiProvidersService.assertVisible(userId, dto.providerId);
     }
     const conversation = await this.prisma.conversation.create({
-      data: { userId, title: dto.title ?? 'New conversation', providerId: dto.providerId },
+      data: {
+        userId,
+        title: dto.title ?? 'New conversation',
+        providerId: dto.providerId,
+      },
     });
     return this.toConversationDto(conversation);
   }
@@ -58,25 +79,35 @@ export class ChatService {
       }),
       this.prisma.message.count({ where: { conversationId } }),
     ]);
-    return { data: data.map((m) => this.toMessageDto(m)), meta: { page, limit, total } };
+    return {
+      data: data.map((m) => this.toMessageDto(m)),
+      meta: { page, limit, total },
+    };
   }
 
-  async deleteConversation(userId: string, conversationId: string): Promise<void> {
+  async deleteConversation(
+    userId: string,
+    conversationId: string,
+  ): Promise<void> {
     await this.findOwnedConversationOrThrow(userId, conversationId);
     await this.prisma.conversation.delete({ where: { id: conversationId } });
   }
 
-  async sendMessage(userId: string, dto: SendMessageDto): Promise<SendMessageResponseDto> {
+  async sendMessage(
+    userId: string,
+    dto: SendMessageDto,
+  ): Promise<SendMessageResponseDto> {
     const conversation = dto.conversationId
       ? await this.findOwnedConversationOrThrow(userId, dto.conversationId)
       : await this.prisma.conversation.create({
           data: { userId, title: dto.content.slice(0, 60) },
         });
 
-    const { adapter, apiKey, providerId } = await this.aiProvidersService.resolveForDispatch(
-      userId,
-      dto.providerId ?? conversation.providerId ?? undefined,
-    );
+    const { adapter, apiKey, providerId } =
+      await this.aiProvidersService.resolveForDispatch(
+        userId,
+        dto.providerId ?? conversation.providerId ?? undefined,
+      );
 
     if (!conversation.providerId) {
       await this.prisma.conversation.update({
@@ -91,7 +122,11 @@ export class ChatService {
     });
 
     const userMessage = await this.prisma.message.create({
-      data: { conversationId: conversation.id, role: 'USER', content: dto.content },
+      data: {
+        conversationId: conversation.id,
+        role: 'USER',
+        content: dto.content,
+      },
     });
 
     const chatMessages: ChatMessage[] = [...history, userMessage].map((m) => ({
@@ -137,10 +172,11 @@ export class ChatService {
               data: { userId, title: dto.content.slice(0, 60) },
             });
 
-        const { adapter, apiKey, providerId } = await this.aiProvidersService.resolveForDispatch(
-          userId,
-          dto.providerId ?? conversation.providerId ?? undefined,
-        );
+        const { adapter, apiKey, providerId } =
+          await this.aiProvidersService.resolveForDispatch(
+            userId,
+            dto.providerId ?? conversation.providerId ?? undefined,
+          );
 
         if (!conversation.providerId) {
           await this.prisma.conversation.update({
@@ -154,16 +190,25 @@ export class ChatService {
           orderBy: { createdAt: 'asc' },
         });
         const userMessage = await this.prisma.message.create({
-          data: { conversationId: conversation.id, role: 'USER', content: dto.content },
+          data: {
+            conversationId: conversation.id,
+            role: 'USER',
+            content: dto.content,
+          },
         });
 
-        const chatMessages: ChatMessage[] = [...history, userMessage].map((m) => ({
-          role: m.role.toLowerCase() as ChatMessage['role'],
-          content: m.content,
-        }));
+        const chatMessages: ChatMessage[] = [...history, userMessage].map(
+          (m) => ({
+            role: m.role.toLowerCase() as ChatMessage['role'],
+            content: m.content,
+          }),
+        );
         const result = await adapter.chat(chatMessages, apiKey);
 
-        subscriber.next({ type: 'conversation', data: { conversationId: conversation.id } });
+        subscriber.next({
+          type: 'conversation',
+          data: { conversationId: conversation.id },
+        });
 
         for (const word of result.content.split(' ')) {
           await new Promise((resolve) => setTimeout(resolve, 15));
@@ -191,7 +236,10 @@ export class ChatService {
 
         subscriber.next({
           type: 'done',
-          data: { messageId: assistantMessage.id, tokensUsed: assistantMessage.tokensUsed },
+          data: {
+            messageId: assistantMessage.id,
+            tokensUsed: assistantMessage.tokensUsed,
+          },
         });
         subscriber.complete();
       })().catch((error: unknown) => subscriber.error(error));
@@ -199,7 +247,9 @@ export class ChatService {
   }
 
   private async findOwnedConversationOrThrow(userId: string, id: string) {
-    const conversation = await this.prisma.conversation.findUnique({ where: { id } });
+    const conversation = await this.prisma.conversation.findUnique({
+      where: { id },
+    });
     if (!conversation || conversation.userId !== userId) {
       throw new NotFoundException('Conversation not found');
     }

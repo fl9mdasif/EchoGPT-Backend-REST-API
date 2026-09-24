@@ -8,7 +8,10 @@ export class UpdateAiProviderDto {
   @MinLength(1)
   name?: string;
 
-  @ApiPropertyOptional({ example: 'sk-...', description: 'Replaces the stored key if provided' })
+  @ApiPropertyOptional({
+    example: 'sk-...',
+    description: 'Replaces the stored key if provided',
+  })
   @IsOptional()
   @IsString()
   @MinLength(8)
@@ -19,7 +22,10 @@ export class UpdateAiProviderDto {
   @IsBoolean()
   isEnabled?: boolean;
 
-  @ApiPropertyOptional({ description: 'Set as your default provider (unsets any other default of yours)' })
+  @ApiPropertyOptional({
+    description:
+      'Set as your default provider (unsets any other default of yours)',
+  })
   @IsOptional()
   @IsBoolean()
   isDefault?: boolean;

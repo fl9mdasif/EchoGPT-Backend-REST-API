@@ -1,5 +1,20 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
 import type { CurrentUserPayload } from '../auth/interfaces/jwt-payload.interface.js';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
@@ -30,7 +45,10 @@ export class SearchController {
       'Identical queries from the same user within 5 minutes are served from cache and do not count against your subscription usage.',
   })
   @ApiResponse({ status: 200, type: SearchResponseDto })
-  @ApiResponse({ status: 403, description: 'Subscription request limit reached' })
+  @ApiResponse({
+    status: 403,
+    description: 'Subscription request limit reached',
+  })
   search(
     @CurrentUser() user: CurrentUserPayload,
     @Body() dto: SearchQueryDto,
@@ -51,7 +69,9 @@ export class SearchController {
   @Get('recent')
   @ApiOperation({ summary: 'The 5 most recent searches' })
   @ApiResponse({ status: 200, type: [SearchHistoryItemDto] })
-  recent(@CurrentUser() user: CurrentUserPayload): Promise<SearchHistoryItemDto[]> {
+  recent(
+    @CurrentUser() user: CurrentUserPayload,
+  ): Promise<SearchHistoryItemDto[]> {
     return this.searchService.recent(user.userId);
   }
 

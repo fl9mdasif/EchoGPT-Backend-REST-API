@@ -1,5 +1,18 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Patch } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Patch,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import type { CurrentUserPayload } from '../auth/interfaces/jwt-payload.interface.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
@@ -32,7 +45,9 @@ export class UsersController {
 
   @Patch('me/password')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Change the current password (revokes other sessions)' })
+  @ApiOperation({
+    summary: 'Change the current password (revokes other sessions)',
+  })
   @ApiResponse({ status: 204, description: 'Password changed' })
   @ApiResponse({ status: 401, description: 'Current password is incorrect' })
   async changePassword(

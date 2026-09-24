@@ -34,14 +34,22 @@ export class SearchService {
     });
 
     if (cached?.resultsJson) {
-      return { query: normalized, cached: true, results: cached.resultsJson as unknown as SearchResultItemDto[] };
+      return {
+        query: normalized,
+        cached: true,
+        results: cached.resultsJson as unknown as SearchResultItemDto[],
+      };
     }
 
     const results = await this.adapter.search(normalized);
 
     await this.prisma.$transaction([
       this.prisma.searchQuery.create({
-        data: { userId, query: normalized, resultsJson: results as unknown as object },
+        data: {
+          userId,
+          query: normalized,
+          resultsJson: results as unknown as object,
+        },
       }),
       this.prisma.subscription.update({
         where: { userId },
@@ -52,7 +60,11 @@ export class SearchService {
     return { query: normalized, cached: false, results };
   }
 
-  async history(userId: string, page: number, limit: number): Promise<SearchHistoryListDto> {
+  async history(
+    userId: string,
+    page: number,
+    limit: number,
+  ): Promise<SearchHistoryListDto> {
     const { skip, take } = toSkipTake(page, limit);
     const [data, total] = await this.prisma.$transaction([
       this.prisma.searchQuery.findMany({
@@ -76,7 +88,10 @@ export class SearchService {
     });
   }
 
-  async suggestions(userId: string, prefix: string): Promise<SearchSuggestionsDto> {
+  async suggestions(
+    userId: string,
+    prefix: string,
+  ): Promise<SearchSuggestionsDto> {
     const trimmed = prefix.trim();
     if (!trimmed) return { suggestions: [] };
 

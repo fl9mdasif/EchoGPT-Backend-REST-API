@@ -38,22 +38,30 @@ function isAlreadyEnveloped(value: unknown): value is Envelope<unknown> {
  * inside `data`, breaking the `event:` line the SSE stream writer emits.
  */
 @Injectable()
-export class TransformInterceptor<T>
-  implements NestInterceptor<T, Envelope<T> | T>
-{
+export class TransformInterceptor<T> implements NestInterceptor<
+  T,
+  Envelope<T> | T
+> {
   constructor(private readonly reflector: Reflector) {}
 
   intercept(
     context: ExecutionContext,
     next: CallHandler<T>,
   ): Observable<Envelope<T> | T> {
-    const isSse = this.reflector.get<boolean>(SSE_METADATA, context.getHandler());
+    const isSse = this.reflector.get<boolean>(
+      SSE_METADATA,
+      context.getHandler(),
+    );
     if (isSse) return next.handle();
 
-    return next.handle().pipe(
-      map((result): Envelope<T> =>
-        isAlreadyEnveloped(result) ? (result as Envelope<T>) : { data: result },
-      ),
-    );
+    return next
+      .handle()
+      .pipe(
+        map((result): Envelope<T> =>
+          isAlreadyEnveloped(result)
+            ? (result as Envelope<T>)
+            : { data: result },
+        ),
+      );
   }
 }

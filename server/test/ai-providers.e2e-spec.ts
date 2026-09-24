@@ -20,7 +20,11 @@ describe('AiProviders (e2e)', () => {
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('api/v1');
     app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
     );
     await app.init();
 
@@ -35,7 +39,9 @@ describe('AiProviders (e2e)', () => {
   });
 
   it('rejects an unauthenticated request with 401', async () => {
-    const response = await request(app.getHttpServer()).get('/api/v1/ai-providers');
+    const response = await request(app.getHttpServer()).get(
+      '/api/v1/ai-providers',
+    );
     expect(response.status).toBe(401);
   });
 
@@ -46,21 +52,29 @@ describe('AiProviders (e2e)', () => {
 
     expect(response.status).toBe(200);
     expect(Array.isArray(response.body.data)).toBe(true);
-    expect(response.body.data.some((p: { ownerUserId: string | null }) => p.ownerUserId === null)).toBe(
-      true,
-    );
+    expect(
+      response.body.data.some(
+        (p: { ownerUserId: string | null }) => p.ownerUserId === null,
+      ),
+    ).toBe(true);
   });
 
   it('creates a provider and never echoes the raw API key back', async () => {
     const response = await request(app.getHttpServer())
       .post('/api/v1/ai-providers')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({ name: 'My Anthropic key', type: 'ANTHROPIC', apiKey: 'sk-ant-1234567890abcdef' });
+      .send({
+        name: 'My Anthropic key',
+        type: 'ANTHROPIC',
+        apiKey: 'sk-ant-1234567890abcdef',
+      });
 
     expect(response.status).toBe(201);
     expect(response.body.data.type).toBe('ANTHROPIC');
     expect(response.body.data.apiKeyPreview).toBe('sk-a••••cdef');
-    expect(JSON.stringify(response.body)).not.toContain('sk-ant-1234567890abcdef');
+    expect(JSON.stringify(response.body)).not.toContain(
+      'sk-ant-1234567890abcdef',
+    );
     providerId = response.body.data.id;
   });
 

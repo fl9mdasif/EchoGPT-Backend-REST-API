@@ -10,7 +10,11 @@ import { OpenAiAdapter } from './adapters/openai.adapter.js';
 export class ProviderRegistryService {
   private readonly adapters: Record<ProviderType, AiProviderAdapter>;
 
-  constructor(openai: OpenAiAdapter, anthropic: AnthropicAdapter, gemini: GeminiAdapter) {
+  constructor(
+    openai: OpenAiAdapter,
+    anthropic: AnthropicAdapter,
+    gemini: GeminiAdapter,
+  ) {
     this.adapters = {
       [ProviderType.OPENAI]: openai,
       [ProviderType.ANTHROPIC]: anthropic,

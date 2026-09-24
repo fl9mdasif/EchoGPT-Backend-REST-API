@@ -12,7 +12,11 @@ import * as bcrypt from 'bcrypt';
 import { Prisma } from '../generated/prisma/client.js';
 import type { Role } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import type { AuthResponseDto, AuthUserDto, TokenPairDto } from './dto/auth-response.dto.js';
+import type {
+  AuthResponseDto,
+  AuthUserDto,
+  TokenPairDto,
+} from './dto/auth-response.dto.js';
 import type { LoginDto } from './dto/login.dto.js';
 import type { RegisterDto } from './dto/register.dto.js';
 import { hashToken } from './utils/hash-token.util.js';
@@ -50,9 +54,15 @@ export class AuthService {
       );
 
       const tokens = await this.issueTokenPair(user.id, user.email, user.role);
-      return { user: this.toPublicUser(user.id, user.email, user.role), ...tokens };
+      return {
+        user: this.toPublicUser(user.id, user.email, user.role),
+        ...tokens,
+      };
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
         throw new ConflictException('Email already registered');
       }
       throw error;
@@ -60,22 +70,36 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<AuthResponseDto> {
-    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
     if (!user || user.deletedAt) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const passwordMatches = await bcrypt.compare(dto.password, user.passwordHash);
+    const passwordMatches = await bcrypt.compare(
+      dto.password,
+      user.passwordHash,
+    );
     if (!passwordMatches) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     const tokens = await this.issueTokenPair(user.id, user.email, user.role);
-    return { user: this.toPublicUser(user.id, user.email, user.role), ...tokens };
+    return {
+      user: this.toPublicUser(user.id, user.email, user.role),
+      ...tokens,
+    };
   }
 
-  async refresh(userId: string, tokenId: string, rawToken: string): Promise<TokenPairDto> {
-    const record = await this.prisma.refreshToken.findUnique({ where: { id: tokenId } });
+  async refresh(
+    userId: string,
+    tokenId: string,
+    rawToken: string,
+  ): Promise<TokenPairDto> {
+    const record = await this.prisma.refreshToken.findUnique({
+      where: { id: tokenId },
+    });
 
     const isValid =
       record &&
@@ -110,7 +134,9 @@ export class AuthService {
   }
 
   async verifyEmail(token: string): Promise<void> {
-    const user = await this.prisma.user.findUnique({ where: { emailVerificationToken: token } });
+    const user = await this.prisma.user.findUnique({
+      where: { emailVerificationToken: token },
+    });
     if (!user) {
       throw new BadRequestException('Invalid or expired verification token');
     }
@@ -120,12 +146,18 @@ export class AuthService {
     });
   }
 
-  private async issueTokenPair(userId: string, email: string, role: Role): Promise<TokenPairDto> {
+  private async issueTokenPair(
+    userId: string,
+    email: string,
+    role: Role,
+  ): Promise<TokenPairDto> {
     const accessToken = await this.jwtService.signAsync(
       { sub: userId, email, role },
       {
         secret: this.config.get<string>('jwt.accessSecret'),
-        expiresIn: this.config.get<string>('jwt.accessExpiresIn') as JwtSignOptions['expiresIn'],
+        expiresIn: this.config.get<string>(
+          'jwt.accessExpiresIn',
+        ) as JwtSignOptions['expiresIn'],
       },
     );
 
@@ -134,7 +166,9 @@ export class AuthService {
       { sub: userId, jti: tokenId },
       {
         secret: this.config.get<string>('jwt.refreshSecret'),
-        expiresIn: this.config.get<string>('jwt.refreshExpiresIn') as JwtSignOptions['expiresIn'],
+        expiresIn: this.config.get<string>(
+          'jwt.refreshExpiresIn',
+        ) as JwtSignOptions['expiresIn'],
       },
     );
 

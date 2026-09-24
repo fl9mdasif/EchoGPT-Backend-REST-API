@@ -19,7 +19,11 @@ describe('Users (e2e)', () => {
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('api/v1');
     app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
     );
     await app.init();
 
@@ -62,7 +66,10 @@ describe('Users (e2e)', () => {
     const response = await request(app.getHttpServer())
       .patch('/api/v1/users/me/password')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({ currentPassword: 'WrongPassword1!', newPassword: 'AnotherStrongPass1!' });
+      .send({
+        currentPassword: 'WrongPassword1!',
+        newPassword: 'AnotherStrongPass1!',
+      });
 
     expect(response.status).toBe(401);
   });

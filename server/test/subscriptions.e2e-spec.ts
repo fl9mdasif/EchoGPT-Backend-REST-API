@@ -19,7 +19,11 @@ describe('Subscriptions (e2e)', () => {
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('api/v1');
     app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
     );
     await app.init();
 
@@ -34,7 +38,9 @@ describe('Subscriptions (e2e)', () => {
   });
 
   it('rejects an unauthenticated request with 401', async () => {
-    const response = await request(app.getHttpServer()).get('/api/v1/subscriptions/me');
+    const response = await request(app.getHttpServer()).get(
+      '/api/v1/subscriptions/me',
+    );
     expect(response.status).toBe(401);
   });
 

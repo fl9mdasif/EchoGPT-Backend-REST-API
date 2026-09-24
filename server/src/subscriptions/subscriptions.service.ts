@@ -24,7 +24,10 @@ export class SubscriptionsService {
       plan: subscription.plan,
       requestsUsed: subscription.requestsUsed,
       requestsLimit: subscription.requestsLimit,
-      remaining: Math.max(0, subscription.requestsLimit - subscription.requestsUsed),
+      remaining: Math.max(
+        0,
+        subscription.requestsLimit - subscription.requestsUsed,
+      ),
       renewsAt: subscription.renewsAt,
     };
   }
@@ -60,7 +63,9 @@ export class SubscriptionsService {
   }
 
   private async findByUserIdOrThrow(userId: string): Promise<SubscriptionDto> {
-    const subscription = await this.prisma.subscription.findUnique({ where: { userId } });
+    const subscription = await this.prisma.subscription.findUnique({
+      where: { userId },
+    });
     if (!subscription) {
       throw new NotFoundException('Subscription not found');
     }

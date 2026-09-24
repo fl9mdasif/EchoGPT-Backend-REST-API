@@ -1,4 +1,8 @@
-import { ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import type { CurrentUserPayload } from '../../auth/interfaces/jwt-payload.interface.js';

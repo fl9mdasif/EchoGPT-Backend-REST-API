@@ -16,7 +16,9 @@ export class TokenPairDto {
   @ApiProperty({ description: 'Short-lived JWT sent as a Bearer token' })
   accessToken!: string;
 
-  @ApiProperty({ description: 'Long-lived token used against POST /auth/refresh' })
+  @ApiProperty({
+    description: 'Long-lived token used against POST /auth/refresh',
+  })
   refreshToken!: string;
 }
 
