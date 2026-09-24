@@ -12,6 +12,7 @@ import {
 import { validateEnv } from './config/env.validation.js';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor.js';
+import { UsageLoggingInterceptor } from './common/interceptors/usage-logging.interceptor.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { HealthModule } from './health/health.module.js';
 import { AuthModule } from './auth/auth.module.js';
@@ -22,6 +23,7 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module.js';
 import { AiProvidersModule } from './ai-providers/ai-providers.module.js';
 import { ChatModule } from './chat/chat.module.js';
 import { SearchModule } from './search/search.module.js';
+import { AdminModule } from './admin/admin.module.js';
 
 @Module({
   imports: [
@@ -44,10 +46,12 @@ import { SearchModule } from './search/search.module.js';
     AiProvidersModule,
     ChatModule,
     SearchModule,
+    AdminModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
     { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
+    { provide: APP_INTERCEPTOR, useClass: UsageLoggingInterceptor },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },

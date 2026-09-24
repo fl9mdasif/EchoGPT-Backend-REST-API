@@ -73,6 +73,74 @@ export class AiProvidersService {
     await this.prisma.aiProvider.delete({ where: { id } });
   }
 
+  // --- Admin-only: global (ownerUserId = null) providers, per docs/architechture.md §4/§7. ---
+
+  async listGlobal(): Promise<AiProviderDto[]> {
+    const providers = await this.prisma.aiProvider.findMany({
+      where: { ownerUserId: null },
+      orderBy: { createdAt: 'asc' },
+    });
+    return providers.map((p) => this.toDto(p));
+  }
+
+  async createGlobal(dto: CreateAiProviderDto): Promise<AiProviderDto> {
+    const { apiKeyEncrypted, apiKeyPreview } = this.encryptApiKey(dto.apiKey);
+
+    if (dto.isDefault) {
+      await this.clearOtherGlobalDefaults();
+    }
+
+    const provider = await this.prisma.aiProvider.create({
+      data: {
+        name: dto.name,
+        type: dto.type,
+        apiKeyEncrypted,
+        apiKeyPreview,
+        isEnabled: dto.isEnabled ?? true,
+        isDefault: dto.isDefault ?? false,
+        ownerUserId: null,
+      },
+    });
+    return this.toDto(provider);
+  }
+
+  async updateGlobal(id: string, dto: UpdateAiProviderDto): Promise<AiProviderDto> {
+    await this.findGlobalOrThrow(id);
+
+    if (dto.isDefault) {
+      await this.clearOtherGlobalDefaults();
+    }
+
+    const keyUpdate =
+      dto.apiKey !== undefined ? this.encryptApiKey(dto.apiKey) : { apiKeyEncrypted: undefined, apiKeyPreview: undefined };
+
+    const provider = await this.prisma.aiProvider.update({
+      where: { id },
+      data: { name: dto.name, isEnabled: dto.isEnabled, isDefault: dto.isDefault, ...keyUpdate },
+    });
+    return this.toDto(provider);
+  }
+
+  async removeGlobal(id: string): Promise<void> {
+    await this.findGlobalOrThrow(id);
+    await this.prisma.aiProvider.delete({ where: { id } });
+  }
+
+  private async findGlobalOrThrow(id: string) {
+    const provider = await this.prisma.aiProvider.findUnique({ where: { id } });
+    if (!provider || provider.ownerUserId !== null) {
+      throw new NotFoundException('Global AI provider not found');
+    }
+    return provider;
+  }
+
+  private async clearOtherGlobalDefaults(): Promise<void> {
+    await this.prisma.aiProvider.updateMany({
+      where: { ownerUserId: null, isDefault: true },
+      data: { isDefault: false },
+    });
+  }
+
   async healthCheck(userId: string, id: string): Promise<ProviderHealth> {
     const provider = await this.findVisibleOrThrow(userId, id);
     const adapter: AiProviderAdapter = this.registry.getAdapter(provider.type);

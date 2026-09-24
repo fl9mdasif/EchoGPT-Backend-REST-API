@@ -117,14 +117,23 @@ phase's cleanup/polish items before its core functionality works end-to-end.
 - [x] Commit: `feat(search): search query, history, suggestions`
 
 ## Phase 9 — Admin module
-- [ ] `GET /admin/dashboard`
-- [ ] User management (list/search/disable/change role)
-- [ ] Subscription overrides
-- [ ] Global AI provider management
-- [ ] `GET /admin/usage-analytics`, `GET /admin/logs`
-- [ ] `ApiUsageLog` write via a global interceptor
-- [ ] `GET /admin/system-health`
-- [ ] Commit: `feat(admin): dashboard, user/subscription/provider admin, logs`
+- [x] `GET /admin/dashboard`
+- [x] User management: `GET /admin/users` (search), `PATCH /admin/users/:id`
+      (role, disable/reactivate)
+- [x] `PATCH /admin/subscriptions/:userId` overrides (+ `GET` list)
+- [x] Global AI provider management (`GET/POST/PATCH/DELETE
+      /admin/ai-providers`, delegates to `AiProvidersService`'s new
+      `*Global` methods)
+- [x] `GET /admin/usage-analytics`, `GET /admin/logs`
+- [x] `ApiUsageLog` write via a global interceptor (`UsageLoggingInterceptor`)
+- [x] `GET /admin/system-health` (DB ping + uptime)
+- [x] All `/admin/*` routes gated by `@Roles(Role.ADMIN)` (RolesGuard,
+      global since Phase 4, finally exercised)
+- [x] e2e: 403 non-admin → dashboard → system-health → list/search users →
+      disable blocks login → reactivate restores it → subscriptions
+      list+override → global provider CRUD → usage-analytics → logs
+      (9 tests, `test/admin.e2e-spec.ts`, using the seeded admin account)
+- [x] Commit: `feat(admin): dashboard, user/subscription/provider admin, logs`
 
 ## Phase 10 — Docs, tests, polish
 - [ ] Swagger: examples + error responses on every route

@@ -208,6 +208,46 @@ that isn't obvious from the code alone.
   `@SkipThrottle()`'d for the same reason `/chat/send` is (Phase 7).
   7 e2e tests. Verified against the dockerized stack. Next: Phase 9
   (Admin module).
+- 2026-09-24: Phase 9 done — `src/admin/` module, all routes under
+  `/admin/*` gated by `@Roles(Role.ADMIN)` (the global `RolesGuard` from
+  Phase 4 finally guards something).
+  - `GET /admin/dashboard`: counts (users, admins, premium/free subs,
+    conversations, messages, searches, requests in the last 24h) via one
+    `$transaction` of counts — no heavy aggregation needed at this scale.
+  - **User "disable" reuses `User.deletedAt`** rather than adding a new
+    column — same soft-delete mechanism the Users module (Phase 4) uses
+    for self-deletion, just admin-triggered and explicitly reversible
+    (`isActive: true` clears `deletedAt` again, which self-service delete
+    never offered). Disabling also revokes the user's outstanding refresh
+    tokens, same as a password change.
+  - **Subscription overrides** (`PATCH /admin/subscriptions/:userId`) allow
+    directly setting `plan`, `status`, `requestsLimit`, `requestsUsed` —
+    unlike the user-facing upgrade/downgrade (Phase 5), which only flips
+    between the two fixed plan presets, an admin override is arbitrary.
+  - **Global AI provider management** added four `*Global` methods to
+    `AiProvidersService` (`listGlobal`/`createGlobal`/`updateGlobal`/
+    `removeGlobal`), scoped to `ownerUserId: null` rows — kept in that
+    service rather than duplicated in `AdminService`, since encryption/
+    masking/default-clearing logic already lives there (Phase 6).
+  - **`UsageLoggingInterceptor`** (new global `APP_INTERCEPTOR`) writes one
+    `ApiUsageLog` row per request, feeding `/admin/usage-analytics` and
+    `/admin/logs`. Uses `finalize()`, not `map`/`tap`, specifically because
+    Phase 7 already hit a bug from an interceptor touching SSE response
+    values — `finalize()` only runs a side effect, never touches what's
+    emitted, so it's safe on `/chat/send/stream` too. Status code for
+    successful responses is resolved from `@HttpCode()` metadata (falling
+    back to Nest's own per-method default: 201 for POST, 200 otherwise)
+    rather than read off the raw Express response object, because at the
+    point an interceptor's `finalize()` runs, Nest hasn't necessarily
+    written the real status onto that object yet — reading metadata is
+    both correct and doesn't depend on framework-internal timing.
+  - Both `SSE_METADATA` and `HTTP_CODE_METADATA` are pinned as literal
+    strings (`'__sse__'`, `'__httpCode__'`) rather than imported — they're
+    real constants in `@nestjs/common`'s source but not part of its public
+    export surface. Worth re-checking both on a Nest major-version bump.
+  9 e2e tests, run against the seeded `admin@echogpt.dev` account (see
+  `prisma/seed.ts`, Phase 2). Verified against the dockerized stack. Next:
+  Phase 10 (docs, tests, polish).
 
 ### Gotchas hit during Phase 2
 
