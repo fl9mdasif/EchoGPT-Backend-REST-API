@@ -9,7 +9,12 @@ const prisma = new PrismaClient({
 
 const SEED_PASSWORD = 'ChangeMe123!';
 
-async function upsertUser(email: string, role: 'ADMIN' | 'USER', plan: 'FREE' | 'PREMIUM') {
+async function upsertUser(
+  email: string,
+  name: string,
+  role: 'ADMIN' | 'USER',
+  plan: 'FREE' | 'PREMIUM',
+) {
   const passwordHash = await bcrypt.hash(SEED_PASSWORD, 12);
 
   const user = await prisma.user.upsert({
@@ -17,6 +22,7 @@ async function upsertUser(email: string, role: 'ADMIN' | 'USER', plan: 'FREE' | 
     update: {},
     create: {
       email,
+      name,
       passwordHash,
       role,
       isEmailVerified: true,
@@ -35,8 +41,8 @@ async function upsertUser(email: string, role: 'ADMIN' | 'USER', plan: 'FREE' | 
 async function main() {
   await prisma.$connect();
 
-  const admin = await upsertUser('admin@echogpt.dev', 'ADMIN', 'PREMIUM');
-  const demoUser = await upsertUser('demo@echogpt.dev', 'USER', 'FREE');
+  const admin = await upsertUser('admin@echogpt.dev', 'Admin', 'ADMIN', 'PREMIUM');
+  const demoUser = await upsertUser('demo@echogpt.dev', 'Demo User', 'USER', 'FREE');
 
   await prisma.aiProvider.upsert({
     where: { id: 'seed-openai-provider' },
