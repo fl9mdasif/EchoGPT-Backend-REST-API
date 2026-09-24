@@ -20,6 +20,7 @@ import { UsersModule } from './users/users.module.js';
 import { RolesGuard } from './common/guards/roles.guard.js';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module.js';
 import { AiProvidersModule } from './ai-providers/ai-providers.module.js';
+import { ChatModule } from './chat/chat.module.js';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { AiProvidersModule } from './ai-providers/ai-providers.module.js';
     UsersModule,
     SubscriptionsModule,
     AiProvidersModule,
+    ChatModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

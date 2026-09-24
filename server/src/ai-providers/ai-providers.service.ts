@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { decryptSecret, encryptSecret, maskSecret } from '../common/crypto/encryption.util.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -76,10 +76,59 @@ export class AiProvidersService {
   async healthCheck(userId: string, id: string): Promise<ProviderHealth> {
     const provider = await this.findVisibleOrThrow(userId, id);
     const adapter: AiProviderAdapter = this.registry.getAdapter(provider.type);
-    const apiKey = provider.apiKeyEncrypted
-      ? decryptSecret(provider.apiKeyEncrypted, this.config.get<string>('security.encryptionKey')!)
-      : null;
+    const apiKey = this.decryptKey(provider.apiKeyEncrypted);
     return adapter.healthCheck(apiKey);
+  }
+
+  /** Throws if the provider doesn't exist or isn't visible to this user. Used by Chat when a conversation pins an explicit provider. */
+  async assertVisible(userId: string, id: string): Promise<void> {
+    await this.findVisibleOrThrow(userId, id);
+  }
+
+  /**
+   * Resolves which provider + adapter + decrypted key to use for a chat
+   * dispatch: an explicit id (validated as visible to the user) takes
+   * priority, then the user's own default, then the global default.
+   */
+  async resolveForDispatch(
+    userId: string,
+    explicitProviderId?: string,
+  ): Promise<{ adapter: AiProviderAdapter; apiKey: string | null; providerId: string }> {
+    const provider = explicitProviderId
+      ? await this.findVisibleOrThrow(userId, explicitProviderId)
+      : await this.findDefaultOrThrow(userId);
+
+    if (!provider.isEnabled) {
+      throw new BadRequestException('This provider is disabled');
+    }
+
+    return {
+      adapter: this.registry.getAdapter(provider.type),
+      apiKey: this.decryptKey(provider.apiKeyEncrypted),
+      providerId: provider.id,
+    };
+  }
+
+  private decryptKey(apiKeyEncrypted: string | null): string | null {
+    return apiKeyEncrypted
+      ? decryptSecret(apiKeyEncrypted, this.config.get<string>('security.encryptionKey')!)
+      : null;
+  }
+
+  private async findDefaultOrThrow(userId: string) {
+    const ownDefault = await this.prisma.aiProvider.findFirst({
+      where: { ownerUserId: userId, isDefault: true, isEnabled: true },
+    });
+    if (ownDefault) return ownDefault;
+
+    const globalDefault = await this.prisma.aiProvider.findFirst({
+      where: { ownerUserId: null, isDefault: true, isEnabled: true },
+    });
+    if (globalDefault) return globalDefault;
+
+    throw new BadRequestException(
+      'No AI provider available — add one and set it as default, or ask an admin to enable a default',
+    );
   }
 
   private encryptApiKey(apiKey: string | undefined): {
