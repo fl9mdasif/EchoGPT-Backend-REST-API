@@ -27,55 +27,94 @@ phase's cleanup/polish items before its core functionality works end-to-end.
 - [x] Commit: `chore: scaffold NestJS project with Prisma, Swagger, config`
 
 ## Phase 2 — Database schema
-- [ ] `prisma/schema.prisma`: User, RefreshToken, Subscription, AiProvider,
+- [x] `prisma/schema.prisma`: User, RefreshToken, Subscription, AiProvider,
       Conversation, Message, SearchQuery, ApiUsageLog + enums (Role, Plan,
-      ProviderType, MessageRole)
-- [ ] Initial migration
-- [ ] Seed script (admin user + free plan defaults)
-- [ ] Commit: `feat(db): initial prisma schema and migration`
+      SubscriptionStatus, ProviderType, MessageRole)
+- [x] Initial migration (`prisma/migrations/20260924053458_init`)
+- [x] Seed script (admin user + demo user + default AI provider) —
+      `npm run prisma:seed` or `npx prisma db seed`
+- [x] Commit: `feat(db): initial prisma schema and migration`
 
 ## Phase 3 — Auth module
-- [ ] Register, Login, Refresh, Logout endpoints
-- [ ] Password hashing (bcrypt)
-- [ ] JwtStrategy + JwtRefreshStrategy, guards
-- [ ] Refresh token rotation + revocation
-- [ ] Email verification stub (token generation + verify endpoint)
-- [ ] Rate limiting on auth routes
-- [ ] e2e: register → login → refresh → logout happy path
-- [ ] Commit: `feat(auth): registration, login, jwt refresh, logout`
+- [x] Register, Login, Refresh, Logout endpoints
+- [x] Password hashing (bcrypt, cost 12)
+- [x] JwtStrategy + JwtRefreshStrategy, guards (JwtAuthGuard global + @Public())
+- [x] Refresh token rotation + revocation (hashed at rest)
+- [x] Email verification stub (token generation + GET /auth/verify-email)
+- [x] Rate limiting on auth routes (5/min via @Throttle)
+- [x] e2e: register → duplicate 409 → login → wrong password 401 → refresh
+      rotation → reused-token 401 → logout → post-logout 401 → garbage
+      token 401 (7 tests, `test/auth.e2e-spec.ts`)
+- [x] Commit: `feat(auth): registration, login, jwt refresh, logout`
 
 ## Phase 4 — Users module
-- [ ] `GET /users/me`, `PATCH /users/me`, `PATCH /users/me/password`,
+- [x] `GET /users/me`, `PATCH /users/me`, `PATCH /users/me/password`,
       `DELETE /users/me` (soft delete)
-- [ ] `RolesGuard` + `@Roles()` decorator
-- [ ] Commit: `feat(users): profile management and roles guard`
+- [x] `RolesGuard` + `@Roles()` decorator (global no-op guard; will gate
+      Phase 9 admin routes)
+- [x] Added `User.name` (schema had no display-name field before this
+      phase) — migration `20260924055716_add_user_name`
+- [x] e2e: 401 unauthenticated → get profile → update name → wrong-password
+      change 401 → change password (revokes sessions, old pw fails login,
+      new pw works) → delete account (soft) → post-delete login 401
+      (6 tests, `test/users.e2e-spec.ts`)
+- [x] Commit: `feat(users): profile management and roles guard`
 
 ## Phase 5 — Subscriptions module
-- [ ] `GET /subscriptions/me`, `POST /subscriptions/upgrade`,
+- [x] `GET /subscriptions/me`, `POST /subscriptions/upgrade`,
       `POST /subscriptions/downgrade`, `GET /subscriptions/usage`
-- [ ] `SubscriptionLimitGuard` (blocks chat/search when over limit)
-- [ ] Commit: `feat(subscriptions): plans, usage limits, upgrade/downgrade`
+- [x] `SubscriptionLimitGuard` (blocks chat/search when over limit) — built,
+      not yet attached anywhere; wired up when Phase 7/8 add the routes it
+      guards
+- [x] e2e: 401 unauthenticated → new user defaults to FREE/ACTIVE/50 →
+      usage matches (0 used, 50 remaining) → upgrade to PREMIUM (5000
+      limit, renewsAt set) → downgrade back to FREE (5 tests,
+      `test/subscriptions.e2e-spec.ts`)
+- [x] Commit: `feat(subscriptions): plans, usage limits, upgrade/downgrade`
 
 ## Phase 6 — AI Providers module
-- [ ] Provider CRUD + enable/disable + set-default
-- [ ] AES-256-GCM key encryption util + masking on read
-- [ ] `ProviderRegistry` + adapter interface
-- [ ] `OpenAiAdapter`, `AnthropicAdapter`, `GeminiAdapter` (mock-capable)
-- [ ] `GET /ai-providers/:id/health`
-- [ ] Commit: `feat(ai-providers): provider CRUD, key encryption, health check`
+- [x] Provider CRUD + enable/disable + set-default (POST/PATCH/DELETE
+      `/ai-providers`, no separate toggle/set-default routes — folded into
+      PATCH's DTO, standard REST, avoids redundant endpoints)
+- [x] AES-256-GCM key encryption util + masking on read (`apiKeyPreview`
+      column, raw key never stored in plaintext or returned in any DTO)
+- [x] `ProviderRegistryService` + `AiProviderAdapter` interface
+- [x] `OpenAiAdapter`, `AnthropicAdapter`, `GeminiAdapter` (share a
+      `MockProviderAdapterBase` — mock-only, see docs/memory.md)
+- [x] `GET /ai-providers/:id/health`
+- [x] e2e: 401 unauthenticated → seeded global provider visible → create
+      (key never echoed back, masked correctly) → update/disable → health
+      check → 404 on someone else's/missing id → delete (7 tests,
+      `test/ai-providers.e2e-spec.ts`)
+- [x] Commit: `feat(ai-providers): provider CRUD, key encryption, health check`
 
 ## Phase 7 — Chat module
-- [ ] Conversations CRUD, messages nested + paginated
-- [ ] `POST /chat/send` → adapter dispatch → persist + return
-- [ ] Provider selection (explicit or user default)
-- [ ] SSE streaming variant (bonus)
-- [ ] Commit: `feat(chat): conversations, send prompt, provider dispatch`
+- [x] Conversations CRUD (list/create/delete), messages nested + paginated
+      (`{data, meta}` shared with Subscriptions/AI-providers-style lists)
+- [x] `POST /chat/send` → adapter dispatch → persist + return
+- [x] Provider selection: explicit `providerId` → conversation's stored
+      provider → user's default → global default → 400 if none
+- [x] `SubscriptionLimitGuard` finally attached (Phase 5 built it unused) —
+      403 once `requestsUsed >= requestsLimit`; `requestsUsed` increments
+      on every successful send
+- [x] SSE streaming variant (bonus) — `GET /chat/send/stream`, emits
+      `conversation`/`chunk`/`done` events
+- [x] e2e: 401 → empty list → send (implicit conversation) → list shows it
+      → paginated messages → second send reuses conversation + usage
+      increments → SSE stream → 404 on bad conversation id → 50-request
+      FREE-limit exhaustion → 403 on the 51st → delete (10 tests,
+      `test/chat.e2e-spec.ts`)
+- [x] Commit: `feat(chat): conversations, send prompt, provider dispatch`
 
 ## Phase 8 — Web Search module
-- [ ] `POST /search`, `GET /search/history`, `GET /search/recent`,
+- [x] `POST /search`, `GET /search/history`, `GET /search/recent`,
       `GET /search/suggestions`
-- [ ] Result caching (bonus)
-- [ ] Commit: `feat(search): search query, history, suggestions`
+- [x] Result caching (bonus) — identical query from the same user within
+      5 minutes is served from the cache, doesn't count against usage
+- [x] e2e: 401 → search (uncached) → repeat search (cached, usage
+      unchanged) → history → recent → suggestions match → empty-prefix
+      suggestions (7 tests, `test/search.e2e-spec.ts`)
+- [x] Commit: `feat(search): search query, history, suggestions`
 
 ## Phase 9 — Admin module
 - [ ] `GET /admin/dashboard`

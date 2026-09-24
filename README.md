@@ -17,10 +17,15 @@ The application itself lives in [`server/`](server).
 cd server
 cp .env.example .env        # fill in real secrets for local dev
 npm install --legacy-peer-deps
-docker compose up -d db     # Postgres on localhost:5432
-npx prisma migrate dev      # apply schema once one exists (Phase 2+)
+docker compose up -d db     # Postgres on localhost:55432 (see note below)
+npx prisma migrate dev      # apply schema + generate client
+npx prisma db seed          # admin@echogpt.dev / demo@echogpt.dev, pw: ChangeMe123!
 npm run start:dev           # http://localhost:3000/api/v1
 ```
+
+Note: the compose Postgres service publishes on host port **55432**, not the
+default 5432 — pick a free port yourself if that's also taken on your
+machine (`docker-compose.yml` + `.env` `DATABASE_URL` both need to agree).
 
 Swagger UI: http://localhost:3000/api/docs
 
