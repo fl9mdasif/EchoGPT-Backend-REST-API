@@ -18,6 +18,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard.js';
 import { UsersModule } from './users/users.module.js';
 import { RolesGuard } from './common/guards/roles.guard.js';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module.js';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { RolesGuard } from './common/guards/roles.guard.js';
     HealthModule,
     AuthModule,
     UsersModule,
+    SubscriptionsModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
