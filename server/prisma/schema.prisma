@@ -96,6 +96,7 @@ model AiProvider {
   name              String
   type              ProviderType
   apiKeyEncrypted   String?
+  apiKeyPreview     String?
   isEnabled         Boolean      @default(true)
   isDefault         Boolean      @default(false)
   ownerUserId       String?

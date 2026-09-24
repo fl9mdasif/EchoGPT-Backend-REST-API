@@ -19,6 +19,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard.js';
 import { UsersModule } from './users/users.module.js';
 import { RolesGuard } from './common/guards/roles.guard.js';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module.js';
+import { AiProvidersModule } from './ai-providers/ai-providers.module.js';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module.js';
     AuthModule,
     UsersModule,
     SubscriptionsModule,
+    AiProvidersModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
